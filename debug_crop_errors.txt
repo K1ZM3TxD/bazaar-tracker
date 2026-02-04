@@ -1,0 +1,10 @@
+Exception calling "FromBase64String" with "1" argument(s): "The input is not a valid Base-64 string as it 
+contains a non-base 64 character, more than two padding characters, or an illegal character among the 
+padding characters. "
+At line:8 char:63
++ ...  if ($b64) { [IO.File]::WriteAllBytes(".\debug_crops\slot$($i).png",  ...
++                                                                ~~
+    + CategoryInfo          : NotSpecified: (:) [], MethodInvocationException
+    + FullyQualifiedErrorId : FormatException
+ 
+

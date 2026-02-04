@@ -1,0 +1,1755 @@
+{
+  "count": 350,
+  "items": [
+    {
+      "name": "Above the Clouds",
+      "image_file": "images/Above_the_Clouds.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cf20ff77-7f51-42ca-8451-a3a1befe3d66.avif"
+    },
+    {
+      "name": "Acclimation",
+      "image_file": "images/Acclimation.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/81075325-d0fd-4bbd-aa62-cc24a35fef79.avif"
+    },
+    {
+      "name": "Adaptive Ordinance",
+      "image_file": "images/Adaptive_Ordinance.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/53aa52ea-b2b7-4b8a-8109-4f67fb4a3e29.avif"
+    },
+    {
+      "name": "Advanced Synthetics",
+      "image_file": "images/Advanced_Synthetics.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1798b189-818a-456d-b7c5-efddf8da15c2.avif"
+    },
+    {
+      "name": "Aerial Assault",
+      "image_file": "images/Aerial_Assault.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9720fe19-9848-4520-ae94-e19e27b9c30f.avif"
+    },
+    {
+      "name": "Aggressive",
+      "image_file": "images/Aggressive.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/756024f8-ad19-4f9b-a3c1-3a93c285b5d1.avif"
+    },
+    {
+      "name": "Alacrity",
+      "image_file": "images/Alacrity.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a9e56561-95d9-46c4-83e3-499e6b159013.avif"
+    },
+    {
+      "name": "Alchemical Precision",
+      "image_file": "images/Alchemical_Precision.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8509674b-3c4b-4250-9bb4-666ef7402654.avif"
+    },
+    {
+      "name": "All Talk",
+      "image_file": "images/All_Talk.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/64727f7e-adfd-4f25-aa4e-1f127b9d5b70.avif"
+    },
+    {
+      "name": "Ambush",
+      "image_file": "images/Ambush.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/dfe40f90-61de-46dc-b807-0da587140e9d.avif"
+    },
+    {
+      "name": "Ammo Stash",
+      "image_file": "images/Ammo_Stash.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/52f43602-8404-4a38-9d16-b1845489851c.avif"
+    },
+    {
+      "name": "Ancient Vengeance",
+      "image_file": "images/Ancient_Vengeance.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/385d9634-f0ab-41f0-be0b-7b2eb280282f.avif"
+    },
+    {
+      "name": "Anything to Win",
+      "image_file": "images/Anything_to_Win.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c1ffec09-0567-47fe-b80e-4f55f62ee7fd.avif"
+    },
+    {
+      "name": "Arbitrage",
+      "image_file": "images/Arbitrage.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/113091ab-c543-4745-9dc4-18ab1cdfb3b8.avif"
+    },
+    {
+      "name": "Archeologist",
+      "image_file": "images/Archeologist.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0e3f3e4c-22a8-456c-9f34-5d9aa3700727.avif"
+    },
+    {
+      "name": "Arms Dealer",
+      "image_file": "images/Arms_Dealer.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/560a532c-73f4-4edd-b197-0127e2ca4cc9.avif"
+    },
+    {
+      "name": "Arms Race",
+      "image_file": "images/Arms_Race.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1c4c5aaa-6aa2-4329-a55a-ac75e987ee95.avif"
+    },
+    {
+      "name": "Artillery Spotter",
+      "image_file": "images/Artillery_Spotter.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f422485c-b23a-4c3f-9ad4-9d22718dc204.avif"
+    },
+    {
+      "name": "Assault Focus",
+      "image_file": "images/Assault_Focus.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/08adc2fd-986c-4e8f-914e-fda9703ace3d.avif"
+    },
+    {
+      "name": "Augmented Defenses",
+      "image_file": "images/Augmented_Defenses.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c318939d-3ba2-41d8-ad5d-1b8267c0cf22.avif"
+    },
+    {
+      "name": "Augmented Weaponry",
+      "image_file": "images/Augmented_Weaponry.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4bcc9eeb-5fa9-4b1f-85b1-d3dfd198d38f.avif"
+    },
+    {
+      "name": "Backroom Dealings",
+      "image_file": "images/Backroom_Dealings.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0045d15e-ac74-436f-a200-eeedab7baf90.avif"
+    },
+    {
+      "name": "Backup Defenses",
+      "image_file": "images/Backup_Defenses.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f7ae1ab0-16dc-46af-9a77-b23b7f33104f.avif"
+    },
+    {
+      "name": "Balanced Friendship",
+      "image_file": "images/Balanced_Friendship.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f3f43bb9-1177-458f-8244-aaf409a050dd.avif"
+    },
+    {
+      "name": "Barnacle Crusted",
+      "image_file": "images/Barnacle_Crusted.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/13d1b66a-1d45-4e8e-9921-8312253fc48e.avif"
+    },
+    {
+      "name": "Beautiful Friendship",
+      "image_file": "images/Beautiful_Friendship.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0eb35f18-3c03-4ea6-9af4-b7345bce1e3c.avif"
+    },
+    {
+      "name": "Berserker",
+      "image_file": "images/Berserker.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/42a245de-4281-40d1-ad98-7a79b471aefe.avif"
+    },
+    {
+      "name": "Big Ego",
+      "image_file": "images/Big_Ego.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/035a7356-9021-4ba9-8c87-6a88181660ea.avif"
+    },
+    {
+      "name": "Big Guns",
+      "image_file": "images/Big_Guns.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f380f03c-3c71-4cae-b423-43fa31a5c3a3.avif"
+    },
+    {
+      "name": "Big Numbers",
+      "image_file": "images/Big_Numbers.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/62154f7f-ea50-4703-aa2e-d2d4ae55e9b0.avif"
+    },
+    {
+      "name": "Biohazard",
+      "image_file": "images/Biohazard.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f45baa82-ff32-4337-88b9-71f7a8f2336f.avif"
+    },
+    {
+      "name": "Blizzard",
+      "image_file": "images/Blizzard.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b2e947ce-a8d9-46e0-8249-22a6a97fbffc.avif"
+    },
+    {
+      "name": "Bloodhound",
+      "image_file": "images/Bloodhound.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/13989ad3-2122-4d86-a323-bb90fda8360b.avif"
+    },
+    {
+      "name": "Bloodthirst",
+      "image_file": "images/Bloodthirst.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f219c4c6-bb56-499a-894d-5dc689e22cb4.avif"
+    },
+    {
+      "name": "Boar Market",
+      "image_file": "images/Boar_Market.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/994de267-673b-4838-9302-1b3b47ab0934.avif"
+    },
+    {
+      "name": "Bold Under Pressure",
+      "image_file": "images/Bold_Under_Pressure.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/daec4b27-bd32-434e-85ef-4bd4629e7d11.avif"
+    },
+    {
+      "name": "Bombing Run",
+      "image_file": "images/Bombing_Run.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8d51073a-d237-4be1-bc6e-440eaec106c5.avif"
+    },
+    {
+      "name": "Bombs Away!",
+      "image_file": "images/Bombs_Away.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2efc2530-badd-4460-9b03-9d34a10a85de.avif"
+    },
+    {
+      "name": "Bonk",
+      "image_file": "images/Bonk.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e8770458-220a-45bd-bfef-d6045b152d29.avif"
+    },
+    {
+      "name": "Brawler",
+      "image_file": "images/Brawler.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1c40716a-d125-4deb-8ada-8b177c5ff071.avif"
+    },
+    {
+      "name": "Brewmaster",
+      "image_file": "images/Brewmaster.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6640af95-3999-43b2-b32d-fae5caf0b8cc.avif"
+    },
+    {
+      "name": "Buddy System",
+      "image_file": "images/Buddy_System.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fa2dfc79-67be-4307-95d9-b4279ab58900.avif"
+    },
+    {
+      "name": "Buffed and Polished",
+      "image_file": "images/Buffed_and_Polished.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0283b102-e0ef-4df4-b447-c5208049bf02.avif"
+    },
+    {
+      "name": "Building Crescendo",
+      "image_file": "images/Building_Crescendo.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3735516a-1517-40fe-b158-9ccee3758fef.avif"
+    },
+    {
+      "name": "Bullet Time",
+      "image_file": "images/Bullet_Time.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e7488436-6835-4e5e-971c-ba0a60f58529.avif"
+    },
+    {
+      "name": "Burn Containment",
+      "image_file": "images/Burn_Containment.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d6251362-7c11-4a7e-9d6d-97f445f2f828.avif"
+    },
+    {
+      "name": "Burning Rage",
+      "image_file": "images/Burning_Rage.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d675442d-7d59-4f13-9209-6e1a4ae7a1fc.avif"
+    },
+    {
+      "name": "Burning Shield",
+      "image_file": "images/Burning_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7931571a-3d32-41e8-bf7b-ca6b4d1b7a3d.avif"
+    },
+    {
+      "name": "Burst of Flame",
+      "image_file": "images/Burst_of_Flame.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ee178ba8-666d-426f-8499-1bd611a91802.avif"
+    },
+    {
+      "name": "Calming Heals",
+      "image_file": "images/Calming_Heals.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/571b3909-e04c-454f-86ae-61cc46ea3066.avif"
+    },
+    {
+      "name": "Captain's Charge",
+      "image_file": "images/Captain's_Charge.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5780e3ce-316c-4871-bfb8-45261b686fc2.avif"
+    },
+    {
+      "name": "Cash Deposits",
+      "image_file": "images/Cash_Deposits.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/dff033fb-0fd4-4ae9-a9c2-ed8a81657d08.avif"
+    },
+    {
+      "name": "Chemical Fire",
+      "image_file": "images/Chemical_Fire.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3715da61-af37-49c6-aa7d-68804484b685.avif"
+    },
+    {
+      "name": "Cherished Keepsake",
+      "image_file": "images/Cherished_Keepsake.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/bb534d6b-4e7e-4f77-950f-8a27e4eb038e.avif"
+    },
+    {
+      "name": "Chilling Touch",
+      "image_file": "images/Chilling_Touch.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2c4b4d14-19db-4d75-9fb6-a377d9ca9882.avif"
+    },
+    {
+      "name": "Chocoholic",
+      "image_file": "images/Chocoholic.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b2cc190c-ddbd-487c-b99a-ed21150b6c10.avif"
+    },
+    {
+      "name": "Circle of Life",
+      "image_file": "images/Circle_of_Life.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9ec041be-6f89-4e95-963d-1deb7460e1d0.avif"
+    },
+    {
+      "name": "Clean Storefront",
+      "image_file": "images/Clean_Storefront.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6bd675c5-a9a3-4a04-b3b3-c6ed09904bc2.avif"
+    },
+    {
+      "name": "Combat Medic",
+      "image_file": "images/Combat_Medic.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/83d940dd-4b3d-4b0c-9f46-43d0041f5626.avif"
+    },
+    {
+      "name": "Command Ship",
+      "image_file": "images/Command_Ship.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ab0ae449-82f3-414d-82d0-1ebc73ba5ee5.avif"
+    },
+    {
+      "name": "Commercial Zoning",
+      "image_file": "images/Commercial_Zoning.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e2bed270-5a6c-46ae-ab7e-a0d34f6da903.avif"
+    },
+    {
+      "name": "Conflagration",
+      "image_file": "images/Conflagration.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f6883b13-0dd2-475f-92e9-760102341bda.avif"
+    },
+    {
+      "name": "Coolant Leak",
+      "image_file": "images/Coolant_Leak.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/dec273b3-155e-4fbd-9629-5dbd2900e032.avif"
+    },
+    {
+      "name": "Cosmic Wind",
+      "image_file": "images/Cosmic_Wind.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/870ed8e7-9c1f-4be0-b84c-00ebcf475a74.avif"
+    },
+    {
+      "name": "Counterstrike",
+      "image_file": "images/Counterstrike.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c5bff6ad-5d13-4cf3-9941-98f3cf913949.avif"
+    },
+    {
+      "name": "CPU Throttling",
+      "image_file": "images/CPU_Throttling.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3dd2dbac-97ee-4fc4-ac31-4d885d19e2ed.avif"
+    },
+    {
+      "name": "Crashing Waves",
+      "image_file": "images/Crashing_Waves.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d2f910bc-3490-456f-8ab0-aedda752bc5c.avif"
+    },
+    {
+      "name": "Creeping Chill",
+      "image_file": "images/Creeping_Chill.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1c47afbe-2e26-4b63-b50c-1bff7d48b88b.avif"
+    },
+    {
+      "name": "Creeping Toxins",
+      "image_file": "images/Creeping_Toxins.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3728b5fe-43aa-4f77-b7a8-b20c3b359295.avif"
+    },
+    {
+      "name": "Crimson Dash",
+      "image_file": "images/Crimson_Dash.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/42a673e6-f6cd-45ea-89e2-d37614271016.avif"
+    },
+    {
+      "name": "Critical Aid",
+      "image_file": "images/Critical_Aid.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/12291452-e5c6-4d98-98c6-69f766536dbd.avif"
+    },
+    {
+      "name": "Critical Investments",
+      "image_file": "images/Critical_Investments.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ae41f574-fc9f-492a-8ae0-45853ab607a6.avif"
+    },
+    {
+      "name": "Critical Protector",
+      "image_file": "images/Critical_Protector.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6216741f-f7fe-4de0-82c0-3733263378f1.avif"
+    },
+    {
+      "name": "Cryomastery",
+      "image_file": "images/Cryomastery.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e2b02661-62c8-42da-be35-3b15eebdb31d.avif"
+    },
+    {
+      "name": "Cult Member",
+      "image_file": "images/Cult_Member.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0f1c6082-c742-4d6a-bf11-12ded9a8bb29.avif"
+    },
+    {
+      "name": "Deadly Eye",
+      "image_file": "images/Deadly_Eye.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/34ad2511-dec9-4e8f-8392-1cc691e77b87.avif"
+    },
+    {
+      "name": "Defense Grid",
+      "image_file": "images/Defense_Grid.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/115c2677-6880-4400-af80-f5afa3d502fe.avif"
+    },
+    {
+      "name": "Defensive Stance",
+      "image_file": "images/Defensive_Stance.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4225d131-791a-4ea4-ab0e-80a3343a3253.avif"
+    },
+    {
+      "name": "Depth Charge",
+      "image_file": "images/Depth_Charge.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6550ba8c-8d90-41f8-82c8-a0af040458ce.avif"
+    },
+    {
+      "name": "Desperate Cleanse",
+      "image_file": "images/Desperate_Cleanse.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/69e15083-66e9-40ca-a3c9-f8bdd8b3887d.avif"
+    },
+    {
+      "name": "Desperate Strike",
+      "image_file": "images/Desperate_Strike.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0dd4d40e-ac14-4a57-8c7f-9d47a5bdd38a.avif"
+    },
+    {
+      "name": "Diamond Fangs",
+      "image_file": "images/Diamond_Fangs.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/20db8a31-f74d-40d2-a5a5-db28e3261bea.avif"
+    },
+    {
+      "name": "Diamond Heart",
+      "image_file": "images/Diamond_Heart.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f568cc30-31d8-48b3-8d26-a0f2032ebc6f.avif"
+    },
+    {
+      "name": "Dirty Dishes",
+      "image_file": "images/Dirty_Dishes.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fdeee7b2-7c1f-48e0-8fe1-e5a43e7a6726.avif"
+    },
+    {
+      "name": "Distributed Systems",
+      "image_file": "images/Distributed_Systems.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b57df6d6-fc6c-4401-ad41-77f83388eabe.avif"
+    },
+    {
+      "name": "Double Down",
+      "image_file": "images/Double_Down.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/37efcae2-779d-4a60-95c6-0d663d7e0113.avif"
+    },
+    {
+      "name": "Draconic Rage",
+      "image_file": "images/Draconic_Rage.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/72010bea-fadf-4f64-9cba-d34bfd014388.avif"
+    },
+    {
+      "name": "Dual Wield",
+      "image_file": "images/Dual_Wield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4a443bdd-f949-4fb5-9ccd-a710f74d2311.avif"
+    },
+    {
+      "name": "Dumpster Diving",
+      "image_file": "images/Dumpster_Diving.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8a9a98fe-b1bd-4da7-8233-dffd3845aa45.avif"
+    },
+    {
+      "name": "Eject, Eject!",
+      "image_file": "images/Eject_Eject.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7edf2ff2-f644-4b68-984f-57cd51bfc0c2.avif"
+    },
+    {
+      "name": "Electrified Hull",
+      "image_file": "images/Electrified_Hull.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1df8d85a-9095-4ab9-952a-c668a4d5d51c.avif"
+    },
+    {
+      "name": "Emergency Burn",
+      "image_file": "images/Emergency_Burn.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/280eb842-0600-4f2c-bbf9-01926b43f1dc.avif"
+    },
+    {
+      "name": "Emergency Draught",
+      "image_file": "images/Emergency_Draught.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d179345d-953d-4c59-a324-5c2504951644.avif"
+    },
+    {
+      "name": "Emergency Shield",
+      "image_file": "images/Emergency_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/158c1575-71c6-406c-82c9-f4435d9b37ca.avif"
+    },
+    {
+      "name": "Endurance",
+      "image_file": "images/Endurance.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c7261fd4-ef40-4091-abb2-dcf5694ae2ac.avif"
+    },
+    {
+      "name": "Equivalent Exchange",
+      "image_file": "images/Equivalent_Exchange.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/dd9d1ad7-8c28-46da-9f98-aaa2cc55cd00.avif"
+    },
+    {
+      "name": "Essence Overflow",
+      "image_file": "images/Essence_Overflow.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/db94a1da-532e-42e1-af25-5033b0fc8bcb.avif"
+    },
+    {
+      "name": "Everlasting Life",
+      "image_file": "images/Everlasting_Life.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ef4e5045-91c6-4973-8aed-1f29300e1db4.avif"
+    },
+    {
+      "name": "Expert Pilot",
+      "image_file": "images/Expert_Pilot.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5fca38e0-2144-422d-b9bd-85a3cd443215.avif"
+    },
+    {
+      "name": "Explosive Potions",
+      "image_file": "images/Explosive_Potions.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/dbd50f7c-4261-4afd-93da-2f4d9e33509e.avif"
+    },
+    {
+      "name": "Exposing Toxins",
+      "image_file": "images/Exposing_Toxins.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/08db2099-a4a9-4d95-afad-e86d4abbf829.avif"
+    },
+    {
+      "name": "Extreme Comfort",
+      "image_file": "images/Extreme_Comfort.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ed7379d4-38ee-48b0-9ef0-61ed3c57ec22.avif"
+    },
+    {
+      "name": "Farm to Table",
+      "image_file": "images/Farm_to_Table.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ed63ead8-5ba3-4972-b547-b1791484fccf.avif"
+    },
+    {
+      "name": "Fast Food",
+      "image_file": "images/Fast_Food.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/965202e6-12e7-476d-adf3-93748e47661f.avif"
+    },
+    {
+      "name": "Fiery",
+      "image_file": "images/Fiery.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b6c90dc6-f497-4fe4-90a1-759947180884.avif"
+    },
+    {
+      "name": "Fiery Rebirth",
+      "image_file": "images/Fiery_Rebirth.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/09c59ebf-d2f9-4862-9c30-396b9ddfdd89.avif"
+    },
+    {
+      "name": "Final Dose",
+      "image_file": "images/Final_Dose.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1aa32e3b-fb93-4d4e-9630-f6168cd77cdc.avif"
+    },
+    {
+      "name": "Final Flame",
+      "image_file": "images/Final_Flame.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0cb66928-870b-4c6b-9325-2c53f774eab9.avif"
+    },
+    {
+      "name": "Finesse Shield",
+      "image_file": "images/Finesse_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8c16e6c8-2f44-4335-b31e-5b2268bf790e.avif"
+    },
+    {
+      "name": "Firepower",
+      "image_file": "images/Firepower.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a6cc6854-91aa-4a30-9936-33db1cf16119.avif"
+    },
+    {
+      "name": "Firestarter",
+      "image_file": "images/Firestarter.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ffceb0c7-7913-4339-8013-f1bcc67cca9c.avif"
+    },
+    {
+      "name": "First Flames",
+      "image_file": "images/First_Flames.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f6a49c4a-7ee7-4aa7-8162-392eee2d3835.avif"
+    },
+    {
+      "name": "First Responder",
+      "image_file": "images/First_Responder.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4e2e23aa-a3d1-46b0-9d59-c06fb64bea2f.avif"
+    },
+    {
+      "name": "First Strike",
+      "image_file": "images/First_Strike.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ef12c160-99ce-4171-a7ba-7fccaaafa239.avif"
+    },
+    {
+      "name": "Flamedancer",
+      "image_file": "images/Flamedancer.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/19b74e9a-6723-4e94-a955-2c39ca48dbd0.avif"
+    },
+    {
+      "name": "Flanking Criticals",
+      "image_file": "images/Flanking_Criticals.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7a301c09-3e32-473a-ba6c-89097657a400.avif"
+    },
+    {
+      "name": "Flash Freeze",
+      "image_file": "images/Flash_Freeze.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2df5681c-8c5c-400a-baa0-ad73391cc085.avif"
+    },
+    {
+      "name": "Flashy Mechanic",
+      "image_file": "images/Flashy_Mechanic.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/40118425-c016-4400-826d-f6ea40b2fc39.avif"
+    },
+    {
+      "name": "Flashy Pilot",
+      "image_file": "images/Flashy_Pilot.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a03e4ce6-4480-4edc-b612-8e1f6700cc26.avif"
+    },
+    {
+      "name": "Flashy Reload",
+      "image_file": "images/Flashy_Reload.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ff37ca26-2e4a-49bc-982d-49ff434e7295.avif"
+    },
+    {
+      "name": "Flurry of Blows",
+      "image_file": "images/Flurry_of_Blows.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/304d505a-d914-4264-9142-b6efb7aca1ff.avif"
+    },
+    {
+      "name": "Focused Rage",
+      "image_file": "images/Focused_Rage.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8d41a164-2667-4df4-91ed-3da224b8c63a.avif"
+    },
+    {
+      "name": "Follow-Up Care",
+      "image_file": "images/Follow-Up_Care.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c5ce101a-3af2-49ce-bcc9-42481355c58e.avif"
+    },
+    {
+      "name": "Food Coma",
+      "image_file": "images/Food_Coma.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/778da878-7748-4782-b348-d5e8df792882.avif"
+    },
+    {
+      "name": "Foreboding Winds",
+      "image_file": "images/Foreboding_Winds.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c9c884fd-849e-4541-b770-4658c2e6e609.avif"
+    },
+    {
+      "name": "Free Ride",
+      "image_file": "images/Free_Ride.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0d8cd0dc-67ab-4c3c-b11c-88e78559a900.avif"
+    },
+    {
+      "name": "Friendzone",
+      "image_file": "images/Friendzone.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e781d7bd-a660-4d5a-a9bf-a7f015a14661.avif"
+    },
+    {
+      "name": "Frontal Shielding",
+      "image_file": "images/Frontal_Shielding.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b7b9f86e-689d-44ec-889d-026e8d45081c.avif"
+    },
+    {
+      "name": "Frostfire",
+      "image_file": "images/Frostfire.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e9218caf-28ed-4e9a-a24b-358d4852d88b.avif"
+    },
+    {
+      "name": "Frozen Shot",
+      "image_file": "images/Frozen_Shot.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6914df97-567f-4d9a-9473-d3de39a09e86.avif"
+    },
+    {
+      "name": "Frozen Synapse",
+      "image_file": "images/Frozen_Synapse.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e5602f0a-0f7f-4832-97cc-59bc7b605804.avif"
+    },
+    {
+      "name": "Full Arsenal",
+      "image_file": "images/Full_Arsenal.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3849770c-59df-4471-b0b0-f02713be8bb0.avif"
+    },
+    {
+      "name": "Glass Cannon",
+      "image_file": "images/Glass_Cannon.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/66d65bb7-09fa-4262-b0a1-12a29ac9e946.avif"
+    },
+    {
+      "name": "Gold Garnish",
+      "image_file": "images/Gold_Garnish.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a557b352-cc6d-45f8-aa3c-d070997cd8cc.avif"
+    },
+    {
+      "name": "Grease Fire",
+      "image_file": "images/Grease_Fire.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cb8e9ed1-764e-4fa5-a2b8-61c2eddcbf7e.avif"
+    },
+    {
+      "name": "Green Light",
+      "image_file": "images/Green_Light.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d26ef556-5508-4c10-b94b-c61e005d2378.avif"
+    },
+    {
+      "name": "Guardian's Fury",
+      "image_file": "images/Guardian's_Fury.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5feded09-ce1a-40ef-9e66-af55ff8c0df5.avif"
+    },
+    {
+      "name": "Gunner",
+      "image_file": "images/Gunner.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/315dc6e8-bc86-4ea5-9c6a-23848028456a.avif"
+    },
+    {
+      "name": "Hard Shell",
+      "image_file": "images/Hard_Shell.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/050ff26a-59ec-4666-89b0-b0630a75149a.avif"
+    },
+    {
+      "name": "Hardened Shield",
+      "image_file": "images/Hardened_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2aabac27-fb64-44df-96f5-b1dac0b23b1c.avif"
+    },
+    {
+      "name": "Hardly Workin'",
+      "image_file": "images/Hardly_Workin'.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3b4c3700-6c77-4954-a3e1-dfeaeab08c4a.avif"
+    },
+    {
+      "name": "Haunting Flight",
+      "image_file": "images/Haunting_Flight.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4160a158-6809-410d-9b7a-21a27fb12f93.avif"
+    },
+    {
+      "name": "Heal Power",
+      "image_file": "images/Heal_Power.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/614a7ba0-6c7f-4686-88e2-42ecfe2d8735.avif"
+    },
+    {
+      "name": "Healthy Friendship",
+      "image_file": "images/Healthy_Friendship.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cb4e5a04-ef5f-40e7-bc1c-bd90baf2f5d0.avif"
+    },
+    {
+      "name": "Healthy Heart",
+      "image_file": "images/Healthy_Heart.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/05ec8652-3c5f-4cba-acd1-c3eee8e49d44.avif"
+    },
+    {
+      "name": "Healthy Hoarder",
+      "image_file": "images/Healthy_Hoarder.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f1c3b934-254a-459f-9078-023edbcfcb03.avif"
+    },
+    {
+      "name": "Healthy Jolt",
+      "image_file": "images/Healthy_Jolt.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/721fa7ca-3451-4bbd-ac17-ffcff4a31ac6.avif"
+    },
+    {
+      "name": "Healthy Lifestyle",
+      "image_file": "images/Healthy_Lifestyle.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/76ac0aa6-ef43-4a5b-9a30-f0ab4186dc83.avif"
+    },
+    {
+      "name": "Healthy Tip",
+      "image_file": "images/Healthy_Tip.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c6a57594-4358-44de-b888-64216df4aa05.avif"
+    },
+    {
+      "name": "Heat Lover",
+      "image_file": "images/Heat_Lover.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/80b1dcad-fc56-43a2-8bcc-cc41e62a7616.avif"
+    },
+    {
+      "name": "Heat Shield",
+      "image_file": "images/Heat_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7919e8b0-d749-4c13-892e-bc794c8cf06e.avif"
+    },
+    {
+      "name": "Heated Shells",
+      "image_file": "images/Heated_Shells.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/76e1e841-8b6c-4871-a077-b17f4806675d.avif"
+    },
+    {
+      "name": "Heavy Firepower",
+      "image_file": "images/Heavy_Firepower.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e634860d-fec5-43c1-a6ca-a349450ae9c8.avif"
+    },
+    {
+      "name": "Heavy Machinery",
+      "image_file": "images/Heavy_Machinery.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/50eaea1d-0159-4feb-b855-9965cd7eddc2.avif"
+    },
+    {
+      "name": "Heavy Mettle",
+      "image_file": "images/Heavy_Mettle.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/82d8a964-4068-44c0-a123-af96e5c350d4.avif"
+    },
+    {
+      "name": "Herbal Supplements",
+      "image_file": "images/Herbal_Supplements.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cac848c8-dc77-4277-ba9f-df282b9f36ef.avif"
+    },
+    {
+      "name": "Honed Arsenal",
+      "image_file": "images/Honed_Arsenal.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a2200487-1d56-4383-8671-781049f8f7de.avif"
+    },
+    {
+      "name": "Honed Strike",
+      "image_file": "images/Honed_Strike.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/41b9dac8-8020-4a0b-bd4e-c069b4cb1caf.avif"
+    },
+    {
+      "name": "Hot Air",
+      "image_file": "images/Hot_Air.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7518cb66-252b-4b9c-9d4d-269aaad8daf3.avif"
+    },
+    {
+      "name": "Hot Meal",
+      "image_file": "images/Hot_Meal.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7b3c06c6-75d2-4c80-b4c5-01ec3c7479d5.avif"
+    },
+    {
+      "name": "Hot Spot",
+      "image_file": "images/Hot_Spot.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9d910b0a-9ef3-447f-ab41-195effb68f21.avif"
+    },
+    {
+      "name": "Housewarming Gifts",
+      "image_file": "images/Housewarming_Gifts.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c149f8da-b64e-46f4-bf80-f6f4cae88fbc.avif"
+    },
+    {
+      "name": "Hunker Down",
+      "image_file": "images/Hunker_Down.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/369a6704-2727-4cea-be27-01b76c82df45.avif"
+    },
+    {
+      "name": "Hyper Focus",
+      "image_file": "images/Hyper_Focus.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8e2f3e1c-bd00-4b58-b746-a6ae18f804c3.avif"
+    },
+    {
+      "name": "Hypnotic Drain",
+      "image_file": "images/Hypnotic_Drain.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/09f668a1-82f6-42d5-94fa-88af3568edd8.avif"
+    },
+    {
+      "name": "Ice Bullets",
+      "image_file": "images/Ice_Bullets.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d52f6759-3ab5-46f4-87d1-bc719634c0d8.avif"
+    },
+    {
+      "name": "Immolating Spark",
+      "image_file": "images/Immolating_Spark.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d09d1ff8-a49b-485b-b1e3-ea50c4af5781.avif"
+    },
+    {
+      "name": "Improved Toxins",
+      "image_file": "images/Improved_Toxins.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d31c4499-c05a-4d7b-8571-a19e102c3169.avif"
+    },
+    {
+      "name": "Improvised Burn",
+      "image_file": "images/Improvised_Burn.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1e8293e9-c60f-464a-9d44-21e766978edc.avif"
+    },
+    {
+      "name": "Improvised Heal",
+      "image_file": "images/Improvised_Heal.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2c637e34-ea4d-4532-9118-fddd9e637342.avif"
+    },
+    {
+      "name": "Improvised Poison",
+      "image_file": "images/Improvised_Poison.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d8e7fa0a-9127-4a11-a84e-d479a011a92d.avif"
+    },
+    {
+      "name": "Improvised Protection",
+      "image_file": "images/Improvised_Protection.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fd927bfc-ff5a-4d9c-87ce-b9510a22e444.avif"
+    },
+    {
+      "name": "Improvised Weaponry",
+      "image_file": "images/Improvised_Weaponry.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3510040e-9d43-4e2a-867e-96cc6740a139.avif"
+    },
+    {
+      "name": "Industrialist",
+      "image_file": "images/Industrialist.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/abba2590-426d-449f-8f19-4a3bd51ae4fe.avif"
+    },
+    {
+      "name": "Inexorable",
+      "image_file": "images/Inexorable.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d53d5ba0-b087-42a2-9523-2a44d9001e07.avif"
+    },
+    {
+      "name": "Initial Chill",
+      "image_file": "images/Initial_Chill.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/05ea3ce6-0626-45c5-af36-a7711200d431.avif"
+    },
+    {
+      "name": "Initial Dose",
+      "image_file": "images/Initial_Dose.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/04168bfd-eac1-40ff-ad34-bc10cb92e636.avif"
+    },
+    {
+      "name": "Insect Bite",
+      "image_file": "images/Insect_Bite.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/dfeaa982-9ed6-4aee-840e-628fa8b508bd.avif"
+    },
+    {
+      "name": "Inspired by Jules: Cooler",
+      "image_file": "images/Inspired_by_Jules_Cooler.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/82be7836-c1f8-4f07-b165-493f40d9d21b.avif"
+    },
+    {
+      "name": "Inspired by Jules: Stove",
+      "image_file": "images/Inspired_by_Jules_Stove.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0d4f9fa5-521c-4e05-8b2b-dc8b185b18eb.avif"
+    },
+    {
+      "name": "Into the Void",
+      "image_file": "images/Into_the_Void.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a2351de3-f077-4631-81fa-5b0f8c2cbb23.avif"
+    },
+    {
+      "name": "Intrusion Countermeasures",
+      "image_file": "images/Intrusion_Countermeasures.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c2e26fae-a435-44ff-8613-8977247ee972.avif"
+    },
+    {
+      "name": "Invigorating Blade",
+      "image_file": "images/Invigorating_Blade.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/549263e2-4ab4-4fe8-a552-e94486b3e91b.avif"
+    },
+    {
+      "name": "Invigorating Cold",
+      "image_file": "images/Invigorating_Cold.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d08258b5-be49-410e-a650-4dfa01b35662.avif"
+    },
+    {
+      "name": "Iron Sharpens Iron",
+      "image_file": "images/Iron_Sharpens_Iron.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/71433809-d05a-4544-9959-aff20ae5db93.avif"
+    },
+    {
+      "name": "Jack of All Trades",
+      "image_file": "images/Jack_of_All_Trades.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/178d4272-35c7-4d10-9deb-58d074d2cbea.avif"
+    },
+    {
+      "name": "Juggler",
+      "image_file": "images/Juggler.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d071e4de-f87f-41b5-b02d-d622e35c0b4d.avif"
+    },
+    {
+      "name": "Jury Rigger",
+      "image_file": "images/Jury_Rigger.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/03968f2d-5f40-464a-bf1f-9475836157cd.avif"
+    },
+    {
+      "name": "Keen Eye",
+      "image_file": "images/Keen_Eye.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b49dd22b-ef95-4f7e-954e-556e1e431d4a.avif"
+    },
+    {
+      "name": "Knife Tricks",
+      "image_file": "images/Knife_Tricks.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b3c4ed70-958a-42e5-b4d4-16b27c03ac54.avif"
+    },
+    {
+      "name": "Large Appetites",
+      "image_file": "images/Large_Appetites.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/19c967e5-f4c0-4c11-bb96-aa039369600a.avif"
+    },
+    {
+      "name": "Lash Out",
+      "image_file": "images/Lash_Out.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/239aeabb-0b0c-484d-a761-ee68ede3223c.avif"
+    },
+    {
+      "name": "Left Eye",
+      "image_file": "images/Left_Eye.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/00f1ae18-33a6-499d-b2ea-319ac3debab9.avif"
+    },
+    {
+      "name": "Left-Handed",
+      "image_file": "images/Left-Handed.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/25c63d19-8254-47f8-acc9-519ee5a69e1f.avif"
+    },
+    {
+      "name": "Lefty Loosey",
+      "image_file": "images/Lefty_Loosey.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/69336595-1135-4e17-8192-247e0478d020.avif"
+    },
+    {
+      "name": "Lethargy",
+      "image_file": "images/Lethargy.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/81881146-f3ba-4092-9041-9f68cc30b732.avif"
+    },
+    {
+      "name": "Letting off Steam",
+      "image_file": "images/Letting_off_Steam.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f1e354bd-d94c-48fa-b63e-5012f68129a9.avif"
+    },
+    {
+      "name": "Lifting",
+      "image_file": "images/Lifting.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c3f674a0-4025-45e1-b611-bf70fd6f279c.avif"
+    },
+    {
+      "name": "Like Clockwork",
+      "image_file": "images/Like_Clockwork.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/760fd7aa-fce6-4779-818e-99ba51274010.avif"
+    },
+    {
+      "name": "Line Cook",
+      "image_file": "images/Line_Cook.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ae686d2c-fce1-401a-8c65-f34fedcce740.avif"
+    },
+    {
+      "name": "Liquid Cooled",
+      "image_file": "images/Liquid_Cooled.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a89060ce-17fa-4706-9c6c-79c0834eeb2c.avif"
+    },
+    {
+      "name": "Living Flame",
+      "image_file": "images/Living_Flame.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ab4d7a85-3eb2-43e8-aa11-f94581f5690f.avif"
+    },
+    {
+      "name": "Loaded Fury",
+      "image_file": "images/Loaded_Fury.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a80d8cc7-3472-45cb-ac33-11fe7e583e42.avif"
+    },
+    {
+      "name": "Long Strides",
+      "image_file": "images/Long_Strides.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6b47d5d7-cd43-4efb-9e3b-5ee3c07a7f7d.avif"
+    },
+    {
+      "name": "Machine Learning",
+      "image_file": "images/Machine_Learning.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d1e825ba-653c-4993-8002-50c3933c5827.avif"
+    },
+    {
+      "name": "Makeshift Plate",
+      "image_file": "images/Makeshift_Plate.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1d0b3080-14a8-41c5-9449-9b48f46d4726.avif"
+    },
+    {
+      "name": "Master Mechanic",
+      "image_file": "images/Master_Mechanic.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/663ca415-c46a-46d1-8f63-c04080fb6a30.avif"
+    },
+    {
+      "name": "Master Salesman",
+      "image_file": "images/Master_Salesman.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b3c7f45e-23f3-44c8-adca-3ca99376e848.avif"
+    },
+    {
+      "name": "Mixed Message",
+      "image_file": "images/Mixed_Message.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4fda14aa-365f-478f-8a27-b9b53c97c56a.avif"
+    },
+    {
+      "name": "Morning Rush",
+      "image_file": "images/Morning_Rush.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9a707fa9-38b6-42dc-a4fb-737982f47745.avif"
+    },
+    {
+      "name": "Moth to a Flame",
+      "image_file": "images/Moth_to_a_Flame.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/529f2133-0d39-4827-9788-2b90c5356b7e.avif"
+    },
+    {
+      "name": "Nanobot Construction",
+      "image_file": "images/Nanobot_Construction.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/13d8c01f-b2a7-4a21-9892-de5b645556bc.avif"
+    },
+    {
+      "name": "Neophiliac",
+      "image_file": "images/Neophiliac.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f9170d20-9caa-41ca-82dd-9536f2f75dd6.avif"
+    },
+    {
+      "name": "Net Launcher",
+      "image_file": "images/Net_Launcher.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9b8912ec-1219-4cdf-acd5-cf9b73438280.avif"
+    },
+    {
+      "name": "Noisy Cricket",
+      "image_file": "images/Noisy_Cricket.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c38468ba-2636-4818-a821-6fb7e73d7110.avif"
+    },
+    {
+      "name": "Oceanic Rush",
+      "image_file": "images/Oceanic_Rush.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/42ca6153-fe5b-44b4-a043-f14870659472.avif"
+    },
+    {
+      "name": "One Shot, One Kill",
+      "image_file": "images/One_Shot_One_Kill.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f9628cc5-fdf8-49cf-8807-d7b85f457aa8.avif"
+    },
+    {
+      "name": "Open for Business",
+      "image_file": "images/Open_for_Business.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/bead31da-27fe-4056-ab77-1adbb37bb973.avif"
+    },
+    {
+      "name": "Outmaneuver",
+      "image_file": "images/Outmaneuver.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f3abf6be-b28d-42f5-a239-7208c2dcde25.avif"
+    },
+    {
+      "name": "Overclocked",
+      "image_file": "images/Overclocked.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fb89bd6d-2677-435a-a73a-e0350cdab29e.avif"
+    },
+    {
+      "name": "Pacifist",
+      "image_file": "images/Pacifist.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d4471fb1-a60b-4f64-9c60-ae0e8c930306.avif"
+    },
+    {
+      "name": "Panic",
+      "image_file": "images/Panic.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/eea71cd9-2688-4c4d-99e7-6eee44cf47a2.avif"
+    },
+    {
+      "name": "Paralytic Poison",
+      "image_file": "images/Paralytic_Poison.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f08ab88b-c40e-4f4e-9419-e7501f9224ec.avif"
+    },
+    {
+      "name": "Paralyzing Rush",
+      "image_file": "images/Paralyzing_Rush.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b7938579-8bc3-4bbf-b002-ffa1870acd50.avif"
+    },
+    {
+      "name": "Parting Shot",
+      "image_file": "images/Parting_Shot.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a885b513-3fe3-4795-a10e-c2e4f6b5f1f6.avif"
+    },
+    {
+      "name": "Party Like it's 011111001111",
+      "image_file": "images/Party_Like_it's_011111001111.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/57a19498-4525-4f15-9aa2-d0b21cf20d73.avif"
+    },
+    {
+      "name": "Passive Power",
+      "image_file": "images/Passive_Power.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/22e88b23-7497-4cb9-92a9-6d5e6bde6373.avif"
+    },
+    {
+      "name": "Peaceful Eye",
+      "image_file": "images/Peaceful_Eye.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b76e0b9a-481c-4128-9ed3-a290f3b21b4f.avif"
+    },
+    {
+      "name": "Petrifying Gaze",
+      "image_file": "images/Petrifying_Gaze.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b21d98f7-d677-4598-8b53-5bfd8301d26a.avif"
+    },
+    {
+      "name": "Pickpocket",
+      "image_file": "images/Pickpocket.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c5936035-d32a-4d82-8dfc-44deb993b5ea.avif"
+    },
+    {
+      "name": "Poison Tyrant",
+      "image_file": "images/Poison_Tyrant.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b89ebdeb-1954-47c8-97fe-8cc3008f2a25.avif"
+    },
+    {
+      "name": "Poisonous Opener",
+      "image_file": "images/Poisonous_Opener.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9d7c0a60-c957-4513-81d8-2ba957b58fb1.avif"
+    },
+    {
+      "name": "Pop-Up Shop",
+      "image_file": "images/Pop-Up_Shop.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4d8b7111-c324-4558-af3c-d7c8df61618d.avif"
+    },
+    {
+      "name": "Potent Potables",
+      "image_file": "images/Potent_Potables.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/edb9b01b-b4ce-4a77-848e-0a49b8a23c16.avif"
+    },
+    {
+      "name": "Power Broker",
+      "image_file": "images/Power_Broker.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/09c4c894-0397-47e5-9635-7b1f4c49527a.avif"
+    },
+    {
+      "name": "Precision Diver",
+      "image_file": "images/Precision_Diver.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2a2ef40a-38d6-4441-ad43-76fc01f31eb4.avif"
+    },
+    {
+      "name": "Precision Tools",
+      "image_file": "images/Precision_Tools.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b67ef429-b97c-4e43-9332-2aea1d82db10.avif"
+    },
+    {
+      "name": "Prime Real Estate",
+      "image_file": "images/Prime_Real_Estate.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b0b38699-beb0-4012-b4f0-bc424f4ba787.avif"
+    },
+    {
+      "name": "Product Showcase",
+      "image_file": "images/Product_Showcase.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/43b5e350-ec7f-4236-aaa4-fbcd0c7721de.avif"
+    },
+    {
+      "name": "Property Mogul",
+      "image_file": "images/Property_Mogul.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/61ffd0e3-a0fe-43d2-8112-85fc90580d71.avif"
+    },
+    {
+      "name": "Prosperity",
+      "image_file": "images/Prosperity.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3c42764f-2a89-4fa2-b901-ca2ec127c411.avif"
+    },
+    {
+      "name": "Protein Powder",
+      "image_file": "images/Protein_Powder.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5f63004e-26dd-460d-b359-38a84ffa66c1.avif"
+    },
+    {
+      "name": "Purifying Flame",
+      "image_file": "images/Purifying_Flame.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8e02521d-4353-4a1d-9d2e-80f6f1e22f53.avif"
+    },
+    {
+      "name": "Pyromania",
+      "image_file": "images/Pyromania.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5de1aaae-adb9-48a4-81fc-aff714956656.avif"
+    },
+    {
+      "name": "Quality over Quantity",
+      "image_file": "images/Quality_over_Quantity.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a3695c78-63e4-45a9-a2b9-9b2827325527.avif"
+    },
+    {
+      "name": "Quick Bite",
+      "image_file": "images/Quick_Bite.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/30df1bd1-0465-4203-b15b-d44a9fcec9a1.avif"
+    },
+    {
+      "name": "Quick Defenses",
+      "image_file": "images/Quick_Defenses.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6e7328ed-f925-4ca6-8637-9625626e12d2.avif"
+    },
+    {
+      "name": "Quick Freeze",
+      "image_file": "images/Quick_Freeze.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b6334c78-623c-4662-8642-8e05555d873a.avif"
+    },
+    {
+      "name": "Quick Ignition",
+      "image_file": "images/Quick_Ignition.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6a2b0ffc-bb7b-4ad3-a20c-8b46f9684a12.avif"
+    },
+    {
+      "name": "Quick Study",
+      "image_file": "images/Quick_Study.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/2d0e4193-304d-4cf8-8232-6386abdf7230.avif"
+    },
+    {
+      "name": "Rapid Relief",
+      "image_file": "images/Rapid_Relief.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/063df89c-4fe9-4e89-a0c4-a0af4dedc9bb.avif"
+    },
+    {
+      "name": "Ravenous",
+      "image_file": "images/Ravenous.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9215b678-2833-427b-bc97-75a90968c634.avif"
+    },
+    {
+      "name": "Re-Tooled",
+      "image_file": "images/Re-Tooled.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d1505b87-551f-4786-818c-3c441f920d7b.avif"
+    },
+    {
+      "name": "Reaching the Summit",
+      "image_file": "images/Reaching_the_Summit.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8a42ef6e-3a7e-41f4-a741-6a33839afe64.avif"
+    },
+    {
+      "name": "Rear Shielding",
+      "image_file": "images/Rear_Shielding.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/976d7de6-8191-44c4-8270-2ebc47775fe8.avif"
+    },
+    {
+      "name": "Red Envelope",
+      "image_file": "images/Red_Envelope.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5ff845f5-6cb5-40b8-957f-8a6ae47c3962.avif"
+    },
+    {
+      "name": "Reel 'Em In",
+      "image_file": "images/Reel_'Em_In.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8e4fed70-3ad9-488d-8c77-f926c1621544.avif"
+    },
+    {
+      "name": "Refreshing Treat",
+      "image_file": "images/Refreshing_Treat.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f6aa6347-024c-4e97-a93d-cf3a7fe8f53e.avif"
+    },
+    {
+      "name": "Regenerative",
+      "image_file": "images/Regenerative.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a1975546-334f-4137-85cc-43a4c8ae49f3.avif"
+    },
+    {
+      "name": "Regular Maintenance",
+      "image_file": "images/Regular_Maintenance.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7ce449d2-0843-4fee-9bdf-dacf380afb8f.avif"
+    },
+    {
+      "name": "Reinforced Steel",
+      "image_file": "images/Reinforced_Steel.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3d75530d-ebad-46fa-a0da-04df6cdb9e5a.avif"
+    },
+    {
+      "name": "Relax Bro",
+      "image_file": "images/Relax_Bro.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/544be6e9-ff3e-4cb6-9759-498ac2d24d71.avif"
+    },
+    {
+      "name": "Renovation",
+      "image_file": "images/Renovation.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ec327a59-8fde-444f-b29b-73b22c248c4e.avif"
+    },
+    {
+      "name": "Reserve Collection",
+      "image_file": "images/Reserve_Collection.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ccb56c81-a3fb-4cd4-bf53-67b19a82458d.avif"
+    },
+    {
+      "name": "Reserve Shield",
+      "image_file": "images/Reserve_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b9ac862b-7599-4d1c-96c7-99e4edaad05f.avif"
+    },
+    {
+      "name": "Retaliatory Toxins",
+      "image_file": "images/Retaliatory_Toxins.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/13f4df45-8f29-4a48-8a2b-b8176e17c85d.avif"
+    },
+    {
+      "name": "Retool",
+      "image_file": "images/Retool.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fb409226-bf38-4275-b775-7fab879a1d6f.avif"
+    },
+    {
+      "name": "Rigged",
+      "image_file": "images/Rigged.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/51cec489-1988-48ff-95af-0235b374803e.avif"
+    },
+    {
+      "name": "Right Eye",
+      "image_file": "images/Right_Eye.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f38a0fb0-b94a-4701-9330-d14a943ac5c4.avif"
+    },
+    {
+      "name": "Right-Handed",
+      "image_file": "images/Right-Handed.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/18c6637b-14c7-4311-b853-e3fd74c613eb.avif"
+    },
+    {
+      "name": "Righty Tighty",
+      "image_file": "images/Righty_Tighty.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b5160cb5-5d92-420b-8883-b67e701b5e5f.avif"
+    },
+    {
+      "name": "Rolling Boil",
+      "image_file": "images/Rolling_Boil.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/c50a4b17-233d-4da5-a8ff-4c4561b6057e.avif"
+    },
+    {
+      "name": "Rush",
+      "image_file": "images/Rush.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d5b180a2-9dfa-43e3-bfb9-3e15dac0398e.avif"
+    },
+    {
+      "name": "Rust",
+      "image_file": "images/Rust.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/aa603f52-3788-40c2-bb99-53e92a69b3f5.avif"
+    },
+    {
+      "name": "Sabotage",
+      "image_file": "images/Sabotage.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fd3f0e7b-27ac-4bde-87f8-5ec61b19c4f7.avif"
+    },
+    {
+      "name": "Scramble Fighters",
+      "image_file": "images/Scramble_Fighters.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/de35c728-b2e6-4cf8-82a2-2a1a41d782fe.avif"
+    },
+    {
+      "name": "Searing Flames",
+      "image_file": "images/Searing_Flames.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/53315fc2-ef04-45fc-b269-9d4932c52621.avif"
+    },
+    {
+      "name": "Second Wind",
+      "image_file": "images/Second_Wind.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4b491993-ccc9-4021-a347-5492a51f7b30.avif"
+    },
+    {
+      "name": "Secret Ingredient",
+      "image_file": "images/Secret_Ingredient.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4199514b-f966-462b-8f5d-7188033bc9d1.avif"
+    },
+    {
+      "name": "Sharp Corners",
+      "image_file": "images/Sharp_Corners.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f0955884-1ea7-4cac-ad73-c30798d3642c.avif"
+    },
+    {
+      "name": "Sharpened Steel",
+      "image_file": "images/Sharpened_Steel.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/813b4dd8-3fd3-4824-be6e-bce2b1f175a3.avif"
+    },
+    {
+      "name": "Sharpshooter",
+      "image_file": "images/Sharpshooter.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3865bde8-45b8-49d6-8945-0453c24251a9.avif"
+    },
+    {
+      "name": "Shatter",
+      "image_file": "images/Shatter.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b7edb810-2ead-4e1c-965d-d787eacc6fd3.avif"
+    },
+    {
+      "name": "Shield Bash",
+      "image_file": "images/Shield_Bash.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6e95c90d-e4b4-42c3-b5e9-3c390d762c92.avif"
+    },
+    {
+      "name": "Shored Up",
+      "image_file": "images/Shored_Up.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7b6a982f-7196-4d3e-8674-825fddba80d2.avif"
+    },
+    {
+      "name": "Sick Burn",
+      "image_file": "images/Sick_Burn.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/d56a6e90-f664-4791-8b78-5c8bd3f45f80.avif"
+    },
+    {
+      "name": "Siphoned Shield",
+      "image_file": "images/Siphoned_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/81d2e9a9-1731-457d-9601-0ded9c19b28f.avif"
+    },
+    {
+      "name": "Slow and Steady",
+      "image_file": "images/Slow_and_Steady.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/61c83a38-2976-45d1-95c7-cafe4f34ed51.avif"
+    },
+    {
+      "name": "Slow Burn",
+      "image_file": "images/Slow_Burn.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cd6ac6ef-dafb-4001-a338-52e791bec4c3.avif"
+    },
+    {
+      "name": "Slowed Targets",
+      "image_file": "images/Slowed_Targets.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1448f669-4c0f-4f86-a23c-00fb647b1153.avif"
+    },
+    {
+      "name": "Small Refresh",
+      "image_file": "images/Small_Refresh.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/8b513e67-9c49-4fed-a7e4-335d982367ac.avif"
+    },
+    {
+      "name": "Snowstorm",
+      "image_file": "images/Snowstorm.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e7cc942b-96c5-4b90-a916-b3db0ee4bfe7.avif"
+    },
+    {
+      "name": "Some Like It Hot",
+      "image_file": "images/Some_Like_It_Hot.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b1b9ff21-32ac-436a-bd3c-120563b26bea.avif"
+    },
+    {
+      "name": "Specialist",
+      "image_file": "images/Specialist.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/afe451fd-7726-4ed6-9ad9-48d917a12012.avif"
+    },
+    {
+      "name": "Start-Up Sequence",
+      "image_file": "images/Start-Up_Sequence.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7f097b31-c29e-4082-a835-6d6457c2d536.avif?v=1"
+    },
+    {
+      "name": "Static Acceleration",
+      "image_file": "images/Static_Acceleration.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/32e45628-c864-4f99-a2e8-94efe6f37cdc.avif"
+    },
+    {
+      "name": "Staying Power",
+      "image_file": "images/Staying_Power.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6a332b72-d300-486b-9659-1ca83e064ed2.avif"
+    },
+    {
+      "name": "Steelstorm",
+      "image_file": "images/Steelstorm.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e43da7b1-1190-469a-b6c6-43d8e3ca0ad6.avif"
+    },
+    {
+      "name": "Stocked",
+      "image_file": "images/Stocked.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/ca3da34f-a982-4ae4-bea0-8dddac873650.avif"
+    },
+    {
+      "name": "Stop That!",
+      "image_file": "images/Stop_That.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9ff2cb3f-99dd-425b-b44f-14a1d0271f56.avif"
+    },
+    {
+      "name": "Streamline Weapon",
+      "image_file": "images/Streamline_Weapon.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3d9279b1-dbf8-4193-8989-8d2b022533af.avif"
+    },
+    {
+      "name": "Street Food",
+      "image_file": "images/Street_Food.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/94ea865d-07ca-4e54-a1cb-8cca3945c3c6.avif"
+    },
+    {
+      "name": "Strength",
+      "image_file": "images/Strength.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/fbbfbef7-8fe4-4ac0-81fa-09afb59e0fcc.avif"
+    },
+    {
+      "name": "Strong Arm",
+      "image_file": "images/Strong_Arm.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/31e244c7-e013-4e6c-a51c-4f0ca8d10472.avif"
+    },
+    {
+      "name": "Stunning Strike",
+      "image_file": "images/Stunning_Strike.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1e75f81b-f982-4642-b33d-497336784f9e.avif"
+    },
+    {
+      "name": "Submerged",
+      "image_file": "images/Submerged.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/338b9fbe-0131-4d89-8661-13aa2dd0c9a1.avif"
+    },
+    {
+      "name": "Supply Cache",
+      "image_file": "images/Supply_Cache.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/546166b0-03bf-42e9-8370-9ad05d1f00c8.avif"
+    },
+    {
+      "name": "Tall Buildings",
+      "image_file": "images/Tall_Buildings.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cdf1d8f2-851b-43a8-bc8b-6d3ce2d4bca9.avif"
+    },
+    {
+      "name": "Target Acquisition",
+      "image_file": "images/Target_Acquisition.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1e65b121-c928-4147-8a76-34a495e7bbb2.avif"
+    },
+    {
+      "name": "Tempering",
+      "image_file": "images/Tempering.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/13bcf77b-0ad0-4dd3-85ed-927799691a72.avif"
+    },
+    {
+      "name": "Temporal Strike",
+      "image_file": "images/Temporal_Strike.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1e63e9bd-603a-4965-a6e8-4e180377c0ff.avif"
+    },
+    {
+      "name": "The Best Defense",
+      "image_file": "images/The_Best_Defense.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/318e27ee-611e-4e8b-bf3b-ae9982494453.avif"
+    },
+    {
+      "name": "The One Potion",
+      "image_file": "images/The_One_Potion.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6ba408d1-dad1-4cf2-b0f9-2afe3cb94bb9.avif"
+    },
+    {
+      "name": "The Right Tool",
+      "image_file": "images/The_Right_Tool.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/4797e5ba-c3ac-4b32-a7ef-93c0a45d1c4f.avif"
+    },
+    {
+      "name": "Thick Hide",
+      "image_file": "images/Thick_Hide.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7ab9d9a7-09b2-4dab-b821-eaaf0fb84523.avif"
+    },
+    {
+      "name": "Thirsty",
+      "image_file": "images/Thirsty.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/878440a6-99e8-4178-8d3f-38c94fb8c334.avif"
+    },
+    {
+      "name": "Thrill of the Flight",
+      "image_file": "images/Thrill_of_the_Flight.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3c90df05-0cf7-4555-bebc-4eedd5d46356.avif"
+    },
+    {
+      "name": "Time to Tinker",
+      "image_file": "images/Time_to_Tinker.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b76a00ad-8034-4ad8-9f55-9fdc279cf60e.avif"
+    },
+    {
+      "name": "Tiny Dancer",
+      "image_file": "images/Tiny_Dancer.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/36410add-d0de-4618-a099-ceb32a87c589.avif"
+    },
+    {
+      "name": "Titanium Casing",
+      "image_file": "images/Titanium_Casing.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9a8aedfe-6b97-4db9-8676-c774292637ee.avif"
+    },
+    {
+      "name": "Tools of the Trade",
+      "image_file": "images/Tools_of_the_Trade.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6c3d41e4-1ca7-4be5-b0e2-6cadbbd2bd27.avif"
+    },
+    {
+      "name": "Toughness",
+      "image_file": "images/Toughness.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/292f58c0-409b-4de7-a8d2-099a8629aa5e.avif"
+    },
+    {
+      "name": "Toxic Flame",
+      "image_file": "images/Toxic_Flame.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/cbd2810c-4713-4503-a97d-30e73ccaebb7.avif"
+    },
+    {
+      "name": "Toxic Friendship",
+      "image_file": "images/Toxic_Friendship.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/570a7c19-0dab-459f-b545-6ade12a69312.avif"
+    },
+    {
+      "name": "Toxic Fuel",
+      "image_file": "images/Toxic_Fuel.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/560a2f2a-6b8c-41ee-8e20-7f7721e8c214.avif"
+    },
+    {
+      "name": "Toxic Shield",
+      "image_file": "images/Toxic_Shield.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a9b441e1-5824-4855-9359-2ab4643d9ff5.avif"
+    },
+    {
+      "name": "Toxic Weapons",
+      "image_file": "images/Toxic_Weapons.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/202e4917-e744-41bf-965a-81edcded9d5f.avif"
+    },
+    {
+      "name": "Toxicity",
+      "image_file": "images/Toxicity.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1fb47cc1-c38f-4240-8f7f-04a78222f5e7.avif"
+    },
+    {
+      "name": "Toxin Injector",
+      "image_file": "images/Toxin_Injector.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/42c33f6c-a233-4ad1-8f04-b1cadac3a15f.avif"
+    },
+    {
+      "name": "Tracer Fire",
+      "image_file": "images/Tracer_Fire.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/7434f3a5-2432-4603-b6d7-46febb9272fd.avif"
+    },
+    {
+      "name": "Trader",
+      "image_file": "images/Trader.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9cd3f8a9-3ca8-482b-8f4c-79f9d1d3400e.avif"
+    },
+    {
+      "name": "Trained",
+      "image_file": "images/Trained.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0526054f-98da-4e95-be68-d25b26bb0fe3.avif"
+    },
+    {
+      "name": "Trickle Down Economics",
+      "image_file": "images/Trickle_Down_Economics.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/639fdb70-8dde-4301-ab75-426556a65eb6.avif"
+    },
+    {
+      "name": "Unwavering",
+      "image_file": "images/Unwavering.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/56450d16-bc69-43fd-bb89-4aff071cda29.avif"
+    },
+    {
+      "name": "Valley Fever",
+      "image_file": "images/Valley_Fever.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/83cf85fa-f486-4486-ba76-c28f4db60677.avif"
+    },
+    {
+      "name": "Vengeance",
+      "image_file": "images/Vengeance.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/9dacb0ad-a016-40ff-a54a-24d807c0988f.avif"
+    },
+    {
+      "name": "Venomous Blade",
+      "image_file": "images/Venomous_Blade.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/e41f6a66-9257-45c3-b249-9f9ef0f93f3e.avif"
+    },
+    {
+      "name": "Venomous Vitality",
+      "image_file": "images/Venomous_Vitality.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/6f593cc1-b44a-43d6-a83b-a68fb477aef2.avif"
+    },
+    {
+      "name": "Vital Renewal",
+      "image_file": "images/Vital_Renewal.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f790df42-e8e6-4329-aaeb-8a757c02c326.avif"
+    },
+    {
+      "name": "Vital Reserve",
+      "image_file": "images/Vital_Reserve.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/b6936741-8ec9-42f1-a6ec-d76061141f7d.avif"
+    },
+    {
+      "name": "Void Energy",
+      "image_file": "images/Void_Energy.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/f74f460e-6b49-43a9-9b9f-9b6fe36d28e9.avif"
+    },
+    {
+      "name": "Void Rage",
+      "image_file": "images/Void_Rage.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3b3b1f2b-7f43-440d-807b-61eea3a65cb0.avif"
+    },
+    {
+      "name": "Void Render",
+      "image_file": "images/Void_Render.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/73722d74-be04-4c9a-a925-6f235feeb11f.avif"
+    },
+    {
+      "name": "Wake-Up Call",
+      "image_file": "images/Wake-Up_Call.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/5c6048f0-8cf1-4f37-8611-ba509a330660.avif"
+    },
+    {
+      "name": "Walk-in Clinic",
+      "image_file": "images/Walk-in_Clinic.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/65a77e2d-6c13-46c2-ae28-c521502a8be3.avif"
+    },
+    {
+      "name": "War Chef",
+      "image_file": "images/War_Chef.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/0e790e41-203a-4b07-8a06-352a2070588d.avif"
+    },
+    {
+      "name": "Warm Hugs",
+      "image_file": "images/Warm_Hugs.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/1d9eb8d1-ef94-4847-b472-28290159e894.avif"
+    },
+    {
+      "name": "Waters of Infinity",
+      "image_file": "images/Waters_of_Infinity.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/a59bc243-7c8b-447a-8ab7-968f662b1c50.avif"
+    },
+    {
+      "name": "Well-Oiled Machine",
+      "image_file": "images/Well-Oiled_Machine.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/3c9eefb8-f348-486b-9ec2-a4920f71bee4.avif"
+    },
+    {
+      "name": "Workin' Hard",
+      "image_file": "images/Workin'_Hard.avif",
+      "source_image_url": "https://howbazaar-images.b-cdn.net/images/skills/76ae19fd-2783-4c21-919a-cdce66bb8948.avif"
+    }
+  ]
+}

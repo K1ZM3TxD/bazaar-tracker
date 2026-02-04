@@ -1,0 +1,183 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+function jsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status })
+}
+
+type SummaryResponse = {
+  totals: {
+    submissions: number
+    unique_screenshots: number
+  }
+  top_heroes: Array<{ class_id: string; class_name: string; submissions: number; avg_wins: number }>
+  top_items: Array<{ item_id: number; item_name: string; picks: number; avg_wins: number }>
+  wins_distribution: Array<{ wins: number; submissions: number }>
+}
+
+export async function GET() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return jsonError('Server misconfigured', 500)
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+  // 1) Total submissions (exact count)
+  const submissionsCountRes = await supabase
+    .from('victory_submissions')
+    .select('id', { count: 'exact', head: true })
+
+  if (submissionsCountRes.error) {
+    return jsonError('Failed to count submissions', 500)
+  }
+
+  const submissionsCount = submissionsCountRes.count ?? 0
+
+  // Pull recent-ish data for beta-scale aggregations.
+  // If you grow past this, we can move these into SQL views / RPC.
+  const MAX_ROWS = 5000
+
+  // 2) Fetch submissions (id, class_id, wins, screenshot_sha256)
+  const subsRes = await supabase
+    .from('victory_submissions')
+    .select('id,class_id,wins,screenshot_sha256,created_at')
+    .order('created_at', { ascending: false })
+    .limit(MAX_ROWS)
+
+  if (subsRes.error) {
+    return jsonError('Failed to load submissions', 500)
+  }
+
+  const subs = subsRes.data ?? []
+
+  // Unique screenshots
+  const shaSet = new Set<string>()
+  for (const s of subs) {
+    if (s.screenshot_sha256) shaSet.add(String(s.screenshot_sha256))
+  }
+
+  // Wins distribution (0-10)
+  const winsDistMap = new Map<number, number>()
+  for (let w = 0; w <= 10; w++) winsDistMap.set(w, 0)
+  for (const s of subs) {
+    const w = Number(s.wins)
+    if (Number.isFinite(w) && w >= 0 && w <= 10) {
+      winsDistMap.set(w, (winsDistMap.get(w) ?? 0) + 1)
+    }
+  }
+
+  // 3) Classes lookup
+  const classesRes = await supabase.from('bazaar_classes').select('id,name')
+  if (classesRes.error) {
+    return jsonError('Failed to load classes', 500)
+  }
+  const classNameById = new Map<string, string>()
+  for (const c of classesRes.data ?? []) {
+    classNameById.set(String(c.id), String(c.name))
+  }
+
+  // 4) Top heroes
+  const heroAgg = new Map<string, { submissions: number; winsSum: number }>()
+  for (const s of subs) {
+    const classId = String(s.class_id)
+    const w = Number(s.wins)
+    const cur = heroAgg.get(classId) ?? { submissions: 0, winsSum: 0 }
+    cur.submissions += 1
+    cur.winsSum += Number.isFinite(w) ? w : 0
+    heroAgg.set(classId, cur)
+  }
+
+  const topHeroes = Array.from(heroAgg.entries())
+    .map(([class_id, v]) => ({
+      class_id,
+      class_name: classNameById.get(class_id) ?? 'Unknown',
+      submissions: v.submissions,
+      avg_wins: v.submissions > 0 ? Math.round((v.winsSum / v.submissions) * 10) / 10 : 0,
+    }))
+    .sort((a, b) => b.submissions - a.submissions)
+    .slice(0, 10)
+
+  // 5) Top items
+  // Build submissionId -> wins lookup for avg_wins by item
+  const winsBySubmissionId = new Map<number, number>()
+  for (const s of subs) {
+    winsBySubmissionId.set(Number(s.id), Number(s.wins))
+  }
+
+  const vsiRes = await supabase
+    .from('victory_submission_items')
+    .select('submission_id,item_id')
+    .order('submission_id', { ascending: false })
+    .limit(MAX_ROWS * 10)
+
+  if (vsiRes.error) {
+    return jsonError('Failed to load submission items', 500)
+  }
+
+  const itemAgg = new Map<number, { picks: number; winsSum: number }>()
+  const itemIds = new Set<number>()
+
+  for (const row of vsiRes.data ?? []) {
+    const itemId = Number((row as any).item_id)
+    const subId = Number((row as any).submission_id)
+    if (!Number.isFinite(itemId) || !Number.isFinite(subId)) continue
+
+    itemIds.add(itemId)
+    const w = winsBySubmissionId.get(subId) ?? 0
+    const cur = itemAgg.get(itemId) ?? { picks: 0, winsSum: 0 }
+    cur.picks += 1
+    cur.winsSum += Number.isFinite(w) ? w : 0
+    itemAgg.set(itemId, cur)
+  }
+
+  // Pull names for items we saw
+  const itemIdList = Array.from(itemIds.values())
+  const itemNameById = new Map<number, string>()
+
+  // Chunk to avoid URL limits
+  const CHUNK = 200
+  for (let i = 0; i < itemIdList.length; i += CHUNK) {
+    const chunk = itemIdList.slice(i, i + CHUNK)
+    const itemsRes = await supabase
+      .from('bazaar_items')
+      .select('id,name')
+      .in('id', chunk)
+
+    if (itemsRes.error) {
+      return jsonError('Failed to load item names', 500)
+    }
+
+    for (const it of itemsRes.data ?? []) {
+      itemNameById.set(Number(it.id), String(it.name))
+    }
+  }
+
+  const topItems = Array.from(itemAgg.entries())
+    .map(([item_id, v]) => ({
+      item_id,
+      item_name: itemNameById.get(item_id) ?? 'Unknown',
+      picks: v.picks,
+      avg_wins: v.picks > 0 ? Math.round((v.winsSum / v.picks) * 10) / 10 : 0,
+    }))
+    .sort((a, b) => b.picks - a.picks)
+    .slice(0, 15)
+
+  const wins_distribution = Array.from(winsDistMap.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([wins, submissions]) => ({ wins, submissions }))
+
+  const payload: SummaryResponse = {
+    totals: {
+      submissions: submissionsCount,
+      unique_screenshots: shaSet.size,
+    },
+    top_heroes: topHeroes,
+    top_items: topItems,
+    wins_distribution,
+  }
+
+  return NextResponse.json(payload)
+}
