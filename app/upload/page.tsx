@@ -1,198 +1,227 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-type SummaryResponse = {
-  totals?: {
-    submissions: number
-    unique_screenshots: number
-  }
+type AnalyzeResponse = {
+  sha256?: string
+  screenshot_sha256?: string
+  submissionId?: string
+  wins?: number
+  deduped?: boolean
+  dedupe?: boolean
   error?: string
 }
 
 type StatusResponse = {
-  submissionId: string
-  wins: number | null
-  storage_path: string
+  submissionId?: string
+  wins?: number | null
+  storage_path?: string
+  error?: string
 }
 
+type UploadStatus = 'idle' | 'uploading' | 'processing' | 'done' | 'error'
+
 export default function UploadPage() {
-  const [summary, setSummary] = useState<SummaryResponse | null>(null)
-  const [summaryError, setSummaryError] = useState<string | null>(null)
-  const [summaryLoading, setSummaryLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [status, setStatus] = useState<UploadStatus>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const [screenshotId, setScreenshotId] = useState('')
-  const [analyzeLoading, setAnalyzeLoading] = useState(false)
-  const [analyzeError, setAnalyzeError] = useState<string | null>(null)
-  const [imageHash, setImageHash] = useState<string | null>(null)
+  const [sha256, setSha256] = useState<string | null>(null)
+  const [submissionId, setSubmissionId] = useState<string | null>(null)
+  const [wins, setWins] = useState<number | null>(null)
+  const [dedupe, setDedupe] = useState<boolean | null>(null)
 
-  const [statusSha, setStatusSha] = useState('')
-  const [statusLoading, setStatusLoading] = useState(false)
-  const [statusError, setStatusError] = useState<string | null>(null)
-  const [statusResult, setStatusResult] = useState<StatusResponse | null>(null)
+  const pollingRef = useRef<{
+    intervalId?: ReturnType<typeof setInterval>
+    timeoutId?: ReturnType<typeof setTimeout>
+    inFlight: boolean
+  }>({ inFlight: false })
+
+  const stopPolling = () => {
+    if (pollingRef.current.intervalId) {
+      clearInterval(pollingRef.current.intervalId)
+    }
+    if (pollingRef.current.timeoutId) {
+      clearTimeout(pollingRef.current.timeoutId)
+    }
+    pollingRef.current.intervalId = undefined
+    pollingRef.current.timeoutId = undefined
+    pollingRef.current.inFlight = false
+  }
 
   useEffect(() => {
-    setSummaryLoading(true)
-    setSummaryError(null)
-
-    fetch('/api/analytics/summary', { cache: 'no-store' })
-      .then(async res => {
-        const data = (await res.json()) as SummaryResponse
-        if (!res.ok || data.error) {
-          throw new Error(data.error || 'Failed to load analytics')
-        }
-        setSummary(data)
-      })
-      .catch(err => {
-        setSummaryError(err?.message || 'Failed to load analytics')
-      })
-      .finally(() => {
-        setSummaryLoading(false)
-      })
+    return () => {
+      stopPolling()
+    }
   }, [])
 
-  async function handleAnalyze() {
-    if (!screenshotId.trim()) return
-    setAnalyzeLoading(true)
-    setAnalyzeError(null)
-    setImageHash(null)
-    setStatusResult(null)
-    setStatusError(null)
+  const statusLabel = (() => {
+    switch (status) {
+      case 'uploading':
+        return 'Uploading…'
+      case 'processing':
+        return 'Processing…'
+      case 'done':
+        return 'Done'
+      case 'error':
+        return 'Error'
+      default:
+        return 'Idle'
+    }
+  })()
+
+  async function handleUpload() {
+    if (!selectedFile) {
+      setErrorMessage('Please select an image to upload.')
+      setStatus('error')
+      return
+    }
+
+    setErrorMessage(null)
+    setStatus('uploading')
+    setSha256(null)
+    setSubmissionId(null)
+    setWins(null)
+    setDedupe(null)
+    stopPolling()
 
     try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+
       const res = await fetch('/api/ingest/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-        body: JSON.stringify({ screenshot_id: screenshotId.trim() }),
+        body: formData,
       })
 
-      const data = (await res.json()) as { image_hash?: string; error?: string }
-      if (!res.ok || data.error || !data.image_hash) {
-        throw new Error(data.error || 'Analyze failed')
+      const data = (await res.json()) as AnalyzeResponse
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Upload failed')
       }
 
-      setImageHash(data.image_hash)
-      setStatusSha(data.image_hash)
-      await handleStatusLookup(data.image_hash)
+      const resolvedSha = data.sha256 || data.screenshot_sha256
+      if (!resolvedSha) {
+        throw new Error('Upload succeeded but no sha256 returned.')
+      }
+
+      setSha256(resolvedSha)
+      if (data.submissionId) {
+        setSubmissionId(data.submissionId)
+      }
+      if (typeof data.wins === 'number') {
+        setWins(data.wins)
+      }
+      if (typeof data.dedupe === 'boolean') {
+        setDedupe(data.dedupe)
+      } else if (typeof data.deduped === 'boolean') {
+        setDedupe(data.deduped)
+      }
+
+      if (typeof data.wins === 'number') {
+        setStatus('done')
+        return
+      }
+
+      setStatus('processing')
+      startPolling(resolvedSha)
     } catch (err: any) {
-      setAnalyzeError(err?.message || 'Analyze failed')
-    } finally {
-      setAnalyzeLoading(false)
+      setErrorMessage(err?.message || 'Upload failed')
+      setStatus('error')
     }
   }
 
-  async function handleStatusLookup(shaOverride?: string) {
-    const sha = (shaOverride ?? statusSha).trim()
-    if (!sha) return
-    setStatusLoading(true)
-    setStatusError(null)
-    setStatusResult(null)
+  function startPolling(hash: string) {
+    stopPolling()
 
-    try {
-      const res = await fetch(`/api/ingest/status?sha256=${encodeURIComponent(sha)}`, {
-        cache: 'no-store',
-      })
+    const poll = async () => {
+      if (pollingRef.current.inFlight) return
+      pollingRef.current.inFlight = true
 
-      const data = (await res.json()) as StatusResponse & { error?: string }
-      if (res.status === 404) {
-        setStatusError('No submission found yet. Try again later.')
-        return
+      try {
+        const res = await fetch(`/api/ingest/status?sha256=${encodeURIComponent(hash)}`, {
+          cache: 'no-store',
+        })
+
+        const data = (await res.json()) as StatusResponse
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Status check failed')
+        }
+
+        if (data.submissionId) {
+          setSubmissionId(data.submissionId)
+        }
+
+        if (typeof data.wins === 'number') {
+          setWins(data.wins)
+          setStatus('done')
+          stopPolling()
+        }
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'Status check failed')
+        setStatus('error')
+        stopPolling()
+      } finally {
+        pollingRef.current.inFlight = false
       }
-      if (!res.ok || data.error) {
-        throw new Error(data.error || 'Status check failed')
-      }
-      setStatusResult(data)
-    } catch (err: any) {
-      setStatusError(err?.message || 'Status check failed')
-    } finally {
-      setStatusLoading(false)
     }
+
+    pollingRef.current.intervalId = setInterval(poll, 1000)
+    pollingRef.current.timeoutId = setTimeout(() => {
+      setErrorMessage('Polling timed out after 30 seconds.')
+      setStatus('error')
+      stopPolling()
+    }, 30_000)
+
+    poll()
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 text-white">
-      <div className="flex items-baseline justify-between mb-6">
-        <h1 className="text-3xl font-bold">Bazzarlytics Beta</h1>
-        <a className="text-sm text-gray-400 underline" href="/analytics">
-          Analytics
-        </a>
+    <div className="max-w-2xl mx-auto py-10 text-white">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Upload Screenshot</h1>
+        <p className="text-sm text-gray-400 mt-2">
+          Upload a Bazaar victory screenshot and we will analyze it for wins.
+        </p>
       </div>
 
-      <div className="border border-gray-700 rounded-lg p-6 space-y-6">
-        <div>
-          <div className="text-sm text-gray-400 mb-2">Analytics snapshot</div>
-          {summaryLoading && <div className="text-sm text-gray-400">Loading…</div>}
-          {summaryError && <div className="text-sm text-red-400">{summaryError}</div>}
-          {summary?.totals && !summaryLoading && !summaryError && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border border-gray-700 rounded-lg p-4 bg-black">
-                <div className="text-xs text-gray-400">Total submissions</div>
-                <div className="text-2xl font-bold mt-1">{summary.totals.submissions}</div>
-              </div>
-              <div className="border border-gray-700 rounded-lg p-4 bg-black">
-                <div className="text-xs text-gray-400">Unique screenshots</div>
-                <div className="text-2xl font-bold mt-1">
-                  {summary.totals.unique_screenshots}
-                </div>
-              </div>
-            </div>
-          )}
+      <div className="border border-gray-700 rounded-lg p-6 space-y-4 bg-black/30">
+        <div className="space-y-2">
+          <label className="block text-sm text-gray-300">Screenshot image</label>
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full text-sm text-gray-200 file:mr-4 file:rounded file:border-0 file:bg-gray-800 file:px-4 file:py-2 file:text-sm file:text-gray-200 hover:file:bg-gray-700"
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null
+              setSelectedFile(file)
+            }}
+          />
         </div>
 
-        <div className="border border-gray-800 rounded-lg p-4 space-y-3">
-          <div className="text-sm text-gray-300 font-semibold">Analyze screenshot</div>
-          <label className="block text-sm text-gray-400">Screenshot ID</label>
-          <input
-            className="w-full bg-black border border-gray-600 rounded px-3 py-2"
-            placeholder="Enter screenshot_id"
-            value={screenshotId}
-            onChange={e => setScreenshotId(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={handleAnalyze}
-            disabled={!screenshotId.trim() || analyzeLoading}
-            className="w-full border border-gray-600 px-4 py-2 rounded disabled:opacity-50"
-          >
-            {analyzeLoading ? 'Analyzing…' : 'Analyze screenshot'}
-          </button>
-          {analyzeError && <div className="text-sm text-red-400">{analyzeError}</div>}
-          {imageHash && (
-            <div className="text-xs text-emerald-300">
-              Image hash: <span className="break-all">{imageHash}</span>
-            </div>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={handleUpload}
+          disabled={status === 'uploading'}
+          className="w-full border border-gray-600 px-4 py-2 rounded disabled:opacity-60"
+        >
+          {status === 'uploading' ? 'Uploading…' : 'Upload'}
+        </button>
 
-        <div className="border border-gray-800 rounded-lg p-4 space-y-3">
-          <div className="text-sm text-gray-300 font-semibold">Check status</div>
-          <label className="block text-sm text-gray-400">SHA-256</label>
-          <input
-            className="w-full bg-black border border-gray-600 rounded px-3 py-2"
-            placeholder="Paste sha256"
-            value={statusSha}
-            onChange={e => setStatusSha(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={() => handleStatusLookup()}
-            disabled={!statusSha.trim() || statusLoading}
-            className="w-full border border-gray-600 px-4 py-2 rounded disabled:opacity-50"
-          >
-            {statusLoading ? 'Checking…' : 'Check status'}
-          </button>
-          {statusError && <div className="text-sm text-red-400">{statusError}</div>}
-          {statusResult && (
-            <div className="text-sm text-gray-200 space-y-1">
-              <div>Submission: {statusResult.submissionId}</div>
-              <div>Wins: {statusResult.wins ?? '—'}</div>
-              <div className="text-xs text-gray-400 break-all">
-                Storage path: {statusResult.storage_path}
-              </div>
+        <div className="text-sm text-gray-300">Status: {statusLabel}</div>
+
+        {errorMessage && <div className="text-sm text-red-400">{errorMessage}</div>}
+
+        {sha256 && (
+          <div className="text-sm text-gray-200 space-y-2">
+            <div>
+              SHA-256:{' '}
+              <span className="text-emerald-300 break-all font-mono">{sha256}</span>
             </div>
-          )}
-        </div>
+            {submissionId && <div>Submission ID: {submissionId}</div>}
+            {dedupe !== null && <div>Dedupe: {dedupe ? 'true' : 'false'}</div>}
+            <div>Wins: {wins ?? '—'}</div>
+          </div>
+        )}
       </div>
     </div>
   )
