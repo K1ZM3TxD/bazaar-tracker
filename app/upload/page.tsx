@@ -1,320 +1,198 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-type ClassRow = { id: string; name: string }
-type ItemRow = { id: number; name: string }
-
-function coerceClasses(payload: unknown): ClassRow[] {
-  if (Array.isArray(payload)) return payload as ClassRow[]
-  if (payload && typeof payload === 'object' && Array.isArray((payload as any).classes)) {
-    return (payload as any).classes as ClassRow[]
+type SummaryResponse = {
+  totals?: {
+    submissions: number
+    unique_screenshots: number
   }
-  return []
+  error?: string
 }
 
-function coerceItems(payload: unknown): ItemRow[] {
-  if (Array.isArray(payload)) return payload as ItemRow[]
-  if (payload && typeof payload === 'object' && Array.isArray((payload as any).items)) {
-    return (payload as any).items as ItemRow[]
-  }
-  return []
+type StatusResponse = {
+  submissionId: string
+  wins: number | null
+  storage_path: string
 }
 
 export default function UploadPage() {
-  const [classes, setClasses] = useState<ClassRow[]>([])
-  const [classesLoadError, setClassesLoadError] = useState<string | null>(null)
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
+  const [summary, setSummary] = useState<SummaryResponse | null>(null)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
 
-  const [file, setFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [screenshotId, setScreenshotId] = useState('')
+  const [analyzeLoading, setAnalyzeLoading] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null)
+  const [imageHash, setImageHash] = useState<string | null>(null)
 
-  const [wins, setWins] = useState<number>(10)
-
-  // Track whether user manually edited wins (so AI doesn't overwrite)
-  const winsTouchedRef = useRef(false)
-
-  async function extractWinsFromImage(f: File): Promise<number | null> {
-    const form = new FormData()
-    form.append('image', f)
-
-    const res = await fetch('/api/vision/extract', {
-      method: 'POST',
-      body: form,
-    })
-
-    if (!res.ok) return null
-
-    const data = await res.json()
-    return typeof data?.wins === 'number' ? data.wins : null
-  }
-
-  // Items
-  const [itemQuery, setItemQuery] = useState('')
-  const [itemResults, setItemResults] = useState<ItemRow[]>([])
-  const [selectedItems, setSelectedItems] = useState<ItemRow[]>([])
-  const [itemsLoading, setItemsLoading] = useState(false)
-  const [itemsError, setItemsError] = useState<string | null>(null)
-  const debounceRef = useRef<number | null>(null)
-
-  // Upload
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [statusSha, setStatusSha] = useState('')
+  const [statusLoading, setStatusLoading] = useState(false)
+  const [statusError, setStatusError] = useState<string | null>(null)
+  const [statusResult, setStatusResult] = useState<StatusResponse | null>(null)
 
   useEffect(() => {
-    ;(async () => {
-      try {
-        const res = await fetch('/api/fetch-classes')
-        if (!res.ok) {
-          setClassesLoadError('Failed to load classes')
-          return
+    setSummaryLoading(true)
+    setSummaryError(null)
+
+    fetch('/api/analytics/summary', { cache: 'no-store' })
+      .then(async res => {
+        const data = (await res.json()) as SummaryResponse
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Failed to load analytics')
         }
-        const data = await res.json()
-        const list = coerceClasses(data)
-        setClasses(list)
-        if (list.length === 0) {
-          setClassesLoadError('No classes returned from API')
-          setSelectedClassId(null)
-        } else {
-          setClassesLoadError(null)
-          // default to first hero so the select is always valid
-          setSelectedClassId(list[0]?.id ?? null)
-        }
-      } catch {
-        setClassesLoadError('Failed to load classes')
-      }
-    })()
+        setSummary(data)
+      })
+      .catch(err => {
+        setSummaryError(err?.message || 'Failed to load analytics')
+      })
+      .finally(() => {
+        setSummaryLoading(false)
+      })
   }, [])
 
-  useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null)
-      return
-    }
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
+  async function handleAnalyze() {
+    if (!screenshotId.trim()) return
+    setAnalyzeLoading(true)
+    setAnalyzeError(null)
+    setImageHash(null)
+    setStatusResult(null)
+    setStatusError(null)
 
-  // When file changes, ask Vision API for wins and pre-fill (if user hasn't manually edited)
-  useEffect(() => {
-    if (!file) return
+    try {
+      const res = await fetch('/api/ingest/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ screenshot_id: screenshotId.trim() }),
+      })
 
-    // new file => allow AI to set wins again
-    winsTouchedRef.current = false
-
-    ;(async () => {
-      const winsFromAI = await extractWinsFromImage(file)
-      if (winsFromAI !== null && !winsTouchedRef.current) {
-        setWins(winsFromAI)
+      const data = (await res.json()) as { image_hash?: string; error?: string }
+      if (!res.ok || data.error || !data.image_hash) {
+        throw new Error(data.error || 'Analyze failed')
       }
-    })()
-  }, [file])
 
-  useEffect(() => {
-    if (debounceRef.current) window.clearTimeout(debounceRef.current)
-
-    setItemsError(null)
-
-    if (itemQuery.trim().length < 2) {
-      setItemResults([])
-      return
+      setImageHash(data.image_hash)
+      setStatusSha(data.image_hash)
+      await handleStatusLookup(data.image_hash)
+    } catch (err: any) {
+      setAnalyzeError(err?.message || 'Analyze failed')
+    } finally {
+      setAnalyzeLoading(false)
     }
-
-    setItemsLoading(true)
-
-    debounceRef.current = window.setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/fetch-items?query=${encodeURIComponent(itemQuery)}`)
-        if (!res.ok) {
-          setItemsError('Failed to fetch items')
-          setItemResults([])
-          return
-        }
-        const data = await res.json()
-        setItemResults(coerceItems(data))
-      } catch {
-        setItemsError('Item search failed')
-        setItemResults([])
-      } finally {
-        setItemsLoading(false)
-      }
-    }, 200)
-  }, [itemQuery])
-
-  function addItem(item: ItemRow) {
-    if (selectedItems.length >= 10) return
-    setSelectedItems(prev => [...prev, item]) // duplicates allowed
-    setItemQuery('')
-    setItemResults([])
   }
 
-  function removeItem(index: number) {
-    setSelectedItems(prev => prev.filter((_, i) => i !== index))
-  }
+  async function handleStatusLookup(shaOverride?: string) {
+    const sha = (shaOverride ?? statusSha).trim()
+    if (!sha) return
+    setStatusLoading(true)
+    setStatusError(null)
+    setStatusResult(null)
 
-  const ready = useMemo(
-    () => !!file && selectedClassId !== null && Number.isFinite(wins) && wins >= 0 && wins <= 10,
-    [file, selectedClassId, wins]
-  )
+    try {
+      const res = await fetch(`/api/ingest/status?sha256=${encodeURIComponent(sha)}`, {
+        cache: 'no-store',
+      })
 
-  async function handleUpload() {
-    if (!file) return
-    setUploading(true)
-    setUploadError(null)
-
-    const fd = new FormData()
-    fd.append('file', file)
-
-    const res = await fetch('/api/ingest/upload', { method: 'POST', body: fd })
-    if (!res.ok) {
-      let msg = 'Upload failed'
-      try {
-        const j = await res.json()
-        msg = j.error || msg
-      } catch {}
-      setUploadError(msg)
+      const data = (await res.json()) as StatusResponse & { error?: string }
+      if (res.status === 404) {
+        setStatusError('No submission found yet. Try again later.')
+        return
+      }
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Status check failed')
+      }
+      setStatusResult(data)
+    } catch (err: any) {
+      setStatusError(err?.message || 'Status check failed')
+    } finally {
+      setStatusLoading(false)
     }
-
-    setUploading(false)
   }
 
   return (
     <div className="max-w-3xl mx-auto py-10 text-white">
-      <h1 className="text-3xl font-bold mb-6">Bazzarlytics Beta</h1>
+      <div className="flex items-baseline justify-between mb-6">
+        <h1 className="text-3xl font-bold">Bazzarlytics Beta</h1>
+        <a className="text-sm text-gray-400 underline" href="/analytics">
+          Analytics
+        </a>
+      </div>
 
       <div className="border border-gray-700 rounded-lg p-6 space-y-6">
-        {/* Screenshot */}
         <div>
-          <label className="block mb-2 text-sm">Screenshot</label>
-
-          <label className="inline-block px-4 py-2 bg-gray-800 border border-gray-600 rounded cursor-pointer hover:bg-gray-700">
-            Choose file
-            <input
-              type="file"
-              className="hidden"
-              accept=".png,.jpg,.jpeg,.webp"
-              onChange={e => {
-                setFile(e.target.files?.[0] || null)
-                setUploadError(null)
-              }}
-            />
-          </label>
-
-          {previewUrl && <img src={previewUrl} className="mt-4 max-h-80 rounded" alt="preview" />}
-        </div>
-
-        {/* Details */}
-        <div>
-          {classesLoadError && (
-            <div className="mb-3 p-3 bg-red-100 text-red-800 rounded">
-              <div className="font-semibold">Classes load error</div>
-              <div>{classesLoadError}</div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 text-sm">Class</label>
-              <select
-                className="w-full bg-black border border-gray-600 rounded px-2 py-1"
-                value={selectedClassId === null ? '' : selectedClassId}
-                onChange={e => {
-                  const raw = e.target.value
-                  setSelectedClassId(raw === '' ? null : raw)
-                }}
-              >
-                {classes.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm">Wins (0–10)</label>
-              <input
-                type="number"
-                min={0}
-                max={10}
-                value={wins}
-                onChange={e => {
-                  winsTouchedRef.current = true
-                  setWins(Number(e.target.value))
-                }}
-                className="w-full bg-black border border-gray-600 rounded px-2 py-1"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Items */}
-        <div>
-          <label className="block mb-1 text-sm">Items on board</label>
-          <input
-            value={itemQuery}
-            onChange={e => setItemQuery(e.target.value)}
-            className="w-full bg-black border border-gray-600 rounded px-2 py-1"
-            placeholder="Type at least 2 characters"
-          />
-
-          {itemsLoading && <div className="text-sm text-gray-400 mt-1">Searching…</div>}
-          {itemsError && <div className="text-sm text-red-400 mt-1">{itemsError}</div>}
-
-          {itemResults.length > 0 && (
-            <div className="mt-1 border border-gray-700 rounded bg-black">
-              {itemResults.map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => addItem(item)}
-                  className="block w-full text-left px-3 py-2 hover:bg-gray-800 disabled:opacity-50"
-                  disabled={selectedItems.length >= 10}
-                  title={selectedItems.length >= 10 ? 'Max 10 items' : 'Add item'}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {selectedItems.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {selectedItems.map((it, i) => (
-                <div
-                  key={`${it.id}-${i}`}
-                  className="flex justify-between items-center border border-gray-700 px-3 py-2 rounded"
-                >
-                  <span className="text-sm">{it.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(i)}
-                    className="text-sm px-2 py-1 border border-gray-600 rounded hover:bg-gray-900"
-                  >
-                    Remove
-                  </button>
+          <div className="text-sm text-gray-400 mb-2">Analytics snapshot</div>
+          {summaryLoading && <div className="text-sm text-gray-400">Loading…</div>}
+          {summaryError && <div className="text-sm text-red-400">{summaryError}</div>}
+          {summary?.totals && !summaryLoading && !summaryError && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border border-gray-700 rounded-lg p-4 bg-black">
+                <div className="text-xs text-gray-400">Total submissions</div>
+                <div className="text-2xl font-bold mt-1">{summary.totals.submissions}</div>
+              </div>
+              <div className="border border-gray-700 rounded-lg p-4 bg-black">
+                <div className="text-xs text-gray-400">Unique screenshots</div>
+                <div className="text-2xl font-bold mt-1">
+                  {summary.totals.unique_screenshots}
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Upload */}
-        <button
-          disabled={!ready || uploading}
-          onClick={handleUpload}
-          className="w-full border border-gray-600 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {uploading ? 'Uploading…' : 'Upload screenshot'}
-        </button>
+        <div className="border border-gray-800 rounded-lg p-4 space-y-3">
+          <div className="text-sm text-gray-300 font-semibold">Analyze screenshot</div>
+          <label className="block text-sm text-gray-400">Screenshot ID</label>
+          <input
+            className="w-full bg-black border border-gray-600 rounded px-3 py-2"
+            placeholder="Enter screenshot_id"
+            value={screenshotId}
+            onChange={e => setScreenshotId(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={handleAnalyze}
+            disabled={!screenshotId.trim() || analyzeLoading}
+            className="w-full border border-gray-600 px-4 py-2 rounded disabled:opacity-50"
+          >
+            {analyzeLoading ? 'Analyzing…' : 'Analyze screenshot'}
+          </button>
+          {analyzeError && <div className="text-sm text-red-400">{analyzeError}</div>}
+          {imageHash && (
+            <div className="text-xs text-emerald-300">
+              Image hash: <span className="break-all">{imageHash}</span>
+            </div>
+          )}
+        </div>
 
-        {uploadError && (
-          <div className="p-3 bg-red-100 text-red-800 rounded">
-            <div className="font-semibold">Upload error</div>
-            <div>{uploadError}</div>
-          </div>
-        )}
+        <div className="border border-gray-800 rounded-lg p-4 space-y-3">
+          <div className="text-sm text-gray-300 font-semibold">Check status</div>
+          <label className="block text-sm text-gray-400">SHA-256</label>
+          <input
+            className="w-full bg-black border border-gray-600 rounded px-3 py-2"
+            placeholder="Paste sha256"
+            value={statusSha}
+            onChange={e => setStatusSha(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => handleStatusLookup()}
+            disabled={!statusSha.trim() || statusLoading}
+            className="w-full border border-gray-600 px-4 py-2 rounded disabled:opacity-50"
+          >
+            {statusLoading ? 'Checking…' : 'Check status'}
+          </button>
+          {statusError && <div className="text-sm text-red-400">{statusError}</div>}
+          {statusResult && (
+            <div className="text-sm text-gray-200 space-y-1">
+              <div>Submission: {statusResult.submissionId}</div>
+              <div>Wins: {statusResult.wins ?? '—'}</div>
+              <div className="text-xs text-gray-400 break-all">
+                Storage path: {statusResult.storage_path}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
