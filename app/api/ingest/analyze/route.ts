@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     {
       const { data: existing, error: existingErr } = await supabase
         .from('victory_submissions')
-        .select('id, wins, storage_path, screenshot_sha256')
+        .select('id, wins, screenshot_sha256')
         .eq('screenshot_sha256', screenshot_sha256)
         .limit(1)
         .maybeSingle()
@@ -76,7 +76,6 @@ export async function POST(req: Request) {
           deduped: true,
           submissionId: existing.id,
           wins: existing.wins,
-          storage_path: existing.storage_path,
           screenshot_sha256: existing.screenshot_sha256,
         })
       }
