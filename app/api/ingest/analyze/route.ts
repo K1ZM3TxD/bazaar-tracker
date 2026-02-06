@@ -3,7 +3,14 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 type VisionWinsResponse = { wins: number }
-type VisionItemsExtractResponse = { slots: Array<{ index: number; image_base64: string }> }
+type VisionItemsExtractResponse = {
+  imageSize: { w: number; h: number }
+  crops: Array<{
+    index: number
+    box: { left: number; top: number; width: number; height: number }
+    pngBase64: string
+  }>
+}
 type VisionItemsClassifyResponse = {
   items: Array<{ name: string; count: number }>
 }
@@ -192,13 +199,15 @@ export async function POST(req: Request) {
     }
 
     const slotsJson = (await slotsRes.json()) as VisionItemsExtractResponse
-    console.log('[ingest/analyze] vision slots response', {
-      slot_count: Array.isArray(slotsJson?.slots) ? slotsJson.slots.length : 0,
+    const crops = Array.isArray(slotsJson?.crops) ? slotsJson.crops : []
+    console.log('[ingest/analyze] vision crops response', {
+      crop_count: crops.length,
     })
 
     // 6) Vision: item classify (send image file)
     const classifyForm = new FormData()
     classifyForm.append('image', file, file.name || 'upload.png')
+    classifyForm.append('crops', JSON.stringify(crops))
 
     const classifyRes = await fetch(`${origin}/api/vision/items/classify`, {
       method: 'POST',
