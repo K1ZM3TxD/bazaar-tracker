@@ -216,8 +216,11 @@ export async function POST(req: Request) {
 
     if (!classifyRes.ok) {
       const classifyBody = await classifyRes.text()
+      console.log('[ingest/analyze] classify non-ok response', {
+        status: classifyRes.status,
+        body: classifyBody,
+      })
       if (classifyRes.status === 400) {
-        console.log('[ingest/analyze] classify 400 body', classifyBody)
         return new NextResponse(classifyBody, {
           status: 400,
           headers: {
