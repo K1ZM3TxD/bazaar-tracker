@@ -197,10 +197,71 @@ export async function POST(req: Request) {
     const classifyJson = (await classifyRes.json()) as VisionItemsClassifyResponse
     const items = Array.isArray(classifyJson?.items) ? classifyJson.items : []
 
-    // 7) Insert victory_submissions
+    // 7) Ensure screenshot row exists for FK
+    let screenshotId: string | null = null
+    const { data: existingScreenshot, error: screenshotLookupErr } = await supabase
+      .from('victory_screenshots')
+      .select('id, storage_path')
+      .eq('storage_path', storage_path)
+      .limit(1)
+      .maybeSingle()
+
+    if (screenshotLookupErr) {
+      return jsonError(
+        'Failed to lookup victory_screenshots',
+        500,
+        screenshotLookupErr.message
+      )
+    }
+
+    if (existingScreenshot?.id) {
+      screenshotId = existingScreenshot.id
+    } else {
+      const newScreenshotId = crypto.randomUUID()
+      const { data: insertedScreenshot, error: screenshotInsertErr } = await supabase
+        .from('victory_screenshots')
+        .insert({ id: newScreenshotId, storage_path })
+        .select('id')
+        .single()
+
+      if (screenshotInsertErr) {
+        const { data: retryScreenshot, error: retryErr } = await supabase
+          .from('victory_screenshots')
+          .select('id')
+          .eq('storage_path', storage_path)
+          .limit(1)
+          .maybeSingle()
+
+        if (retryErr || !retryScreenshot?.id) {
+          return jsonError(
+            'Failed to insert victory_screenshots',
+            500,
+            screenshotInsertErr.message
+          )
+        }
+
+        screenshotId = retryScreenshot.id
+      } else {
+        screenshotId = insertedScreenshot.id
+      }
+    }
+
+    if (!screenshotId) {
+      return jsonError('Failed to resolve screenshot_id', 500)
+    }
+
+    const submissionPath = 'new submission'
+    console.error('[ingest/analyze] victory_submissions insert', {
+      screenshot_id: screenshotId,
+      screenshot_id_type: typeof screenshotId,
+      submission_path: submissionPath,
+    })
+
+    // 8) Insert victory_submissions
     const { data: created, error: subInsErr } = await supabase
       .from('victory_submissions')
       .insert({
+        screenshot_id: screenshotId,
         screenshot_sha256,
         wins,
       })
@@ -213,7 +274,7 @@ export async function POST(req: Request) {
 
     createdSubmissionId = created.id
 
-    // 8) Insert victory_submission_items
+    // 9) Insert victory_submission_items
     if (items.length > 0) {
       const rows = items
         .filter((it) => it && typeof it.name === 'string' && it.name.length > 0)
