@@ -491,9 +491,17 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get("image");
     const slotsField = form.get("slots");
+    const cropsField = form.get("crops");
     const receivedFields = Array.from(form.keys());
 
-    if (!(file instanceof File) && typeof slotsField !== "string") {
+    const slotsPayload =
+      typeof slotsField === "string"
+        ? slotsField
+        : typeof cropsField === "string"
+          ? cropsField
+          : null;
+
+    if (!(file instanceof File) && !slotsPayload) {
       return NextResponse.json(
         {
           error: "Missing form field 'image' or 'slots'",
@@ -508,14 +516,44 @@ export async function POST(req: NextRequest) {
     let boxes: CropBox[] = [];
     let slots: SlotFeature[] = [];
 
-    if (typeof slotsField === "string") {
+    if (file instanceof File) {
+      bytes = Buffer.from(await file.arrayBuffer());
+    }
+
+    if (slotsPayload) {
       try {
-        const payload = parseSlotPayload(slotsField);
-        slots = await buildSlotsFromCrops(payload.crops);
+        const payload = parseSlotPayload(slotsPayload);
         imageSize = payload.imageSize ?? null;
-        boxes = payload.crops.map(
-          (crop, index) => crop.box ?? { left: index, top: 0, width: 0, height: 0 }
-        );
+
+        if (bytes) {
+          if (!imageSize) {
+            const size = await getImageSize(bytes);
+            imageSize = { w: size.w, h: size.h };
+          }
+          const { w, h } = imageSize ?? { w: 0, h: 0 };
+          boxes = payload.crops.map((crop, index) => {
+            if (!crop.box) {
+              throw new Error(`Slot ${index} missing box`);
+            }
+            return clampBox(crop.box, w, h);
+          });
+          for (let i = 0; i < boxes.length; i++) {
+            slots.push({
+              index: payload.crops[i]?.index ?? i,
+              box: boxes[i],
+              aHash64: await cropToAHash64(bytes, boxes[i]),
+              dHash64: await cropToDHash64(bytes, boxes[i]),
+              pHash64: await cropToPHash64(bytes, boxes[i]),
+              autoDetected: false,
+              candidates: [],
+            });
+          }
+        } else {
+          slots = await buildSlotsFromCrops(payload.crops);
+          boxes = payload.crops.map(
+            (crop, index) => crop.box ?? { left: index, top: 0, width: 0, height: 0 }
+          );
+        }
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Invalid slots JSON" },
@@ -523,7 +561,6 @@ export async function POST(req: NextRequest) {
         );
       }
     } else if (file instanceof File) {
-      bytes = Buffer.from(await file.arrayBuffer());
       const { w, h } = await getImageSize(bytes);
       imageSize = { w, h };
       boxes = await buildItemIconBoxes(bytes, w, h);
