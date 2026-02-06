@@ -91,7 +91,7 @@ export async function POST(req: Request) {
       const { error: upErr } = await supabase.storage
         .from('victory_screenshots')
         .upload(storage_path, bytes, {
-          upsert: false,
+          upsert: true,
           contentType: file.type || 'application/octet-stream',
         })
 
@@ -136,11 +136,14 @@ export async function POST(req: Request) {
     const signed_read_url = signed.signedUrl
     const origin = new URL(req.url).origin
 
-    // 4) Vision: wins
+       // 4) Vision: wins (send image file)
+    const winsForm = new FormData()
+    // `file` is the uploaded File from the multipart request
+    winsForm.append('image', file, file.name || 'upload.png')
+
     const winsRes = await fetch(`${origin}/api/vision/extract`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_url: signed_read_url }),
+      body: winsForm,
     })
 
     if (!winsRes.ok) {
@@ -157,11 +160,13 @@ export async function POST(req: Request) {
       return jsonError('Vision returned invalid wins', 500, winsJson)
     }
 
-    // 5) Vision: slot crops
+    // 5) Vision: slot crops (send image file)
+    const slotsForm = new FormData()
+    slotsForm.append('image', file, file.name || 'upload.png')
+
     const slotsRes = await fetch(`${origin}/api/vision/items/extract`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_url: signed_read_url }),
+      body: slotsForm,
     })
 
     if (!slotsRes.ok) {
@@ -173,11 +178,13 @@ export async function POST(req: Request) {
 
     const slotsJson = (await slotsRes.json()) as VisionItemsExtractResponse
 
-    // 6) Vision: classify into grouped items
+    // 6) Vision: item classify (send image file)
+    const classifyForm = new FormData()
+    classifyForm.append('image', file, file.name || 'upload.png')
+
     const classifyRes = await fetch(`${origin}/api/vision/items/classify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slots: slotsJson.slots }),
+      body: classifyForm,
     })
 
     if (!classifyRes.ok) {
@@ -195,7 +202,6 @@ export async function POST(req: Request) {
       .from('victory_submissions')
       .insert({
         screenshot_sha256,
-        storage_path,
         wins,
       })
       .select('id')
