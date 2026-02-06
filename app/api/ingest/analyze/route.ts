@@ -7,6 +7,10 @@ type VisionItemsExtractResponse = { slots: Array<{ index: number; image_base64: 
 type VisionItemsClassifyResponse = {
   items: Array<{ name: string; count: number }>
 }
+type BazaarClass = {
+  id: string | number
+  name: string | null
+}
 
 function jsonError(message: string, status: number, details?: any) {
   return NextResponse.json(
@@ -197,6 +201,26 @@ export async function POST(req: Request) {
     const classifyJson = (await classifyRes.json()) as VisionItemsClassifyResponse
     const items = Array.isArray(classifyJson?.items) ? classifyJson.items : []
 
+    // 6.5) Resolve class (no vision classifier yet). Use a safe default from bazaar_classes.
+    const { data: classes, error: classesErr } = await supabase
+      .from('bazaar_classes')
+      .select('id,name')
+      .order('name', { ascending: true })
+
+    if (classesErr) {
+      return jsonError('Failed to load classes', 500, classesErr.message)
+    }
+
+    if (!classes || classes.length === 0) {
+      return jsonError('No classes available for default', 500)
+    }
+
+    const defaultClass =
+      classes.find(
+        (c: BazaarClass) => (c?.name ?? '').trim().toLowerCase() === 'unknown'
+      ) ?? classes[0]
+    const class_id = defaultClass.id
+
     // 7) Ensure screenshot row exists for FK
     let screenshotId: string | null = null
     const { data: existingScreenshot, error: screenshotLookupErr } = await supabase
@@ -255,6 +279,8 @@ export async function POST(req: Request) {
       screenshot_id: screenshotId,
       screenshot_id_type: typeof screenshotId,
       submission_path: submissionPath,
+      class_id,
+      class_id_type: typeof class_id,
     })
 
     // 8) Insert victory_submissions
@@ -263,6 +289,7 @@ export async function POST(req: Request) {
       .insert({
         screenshot_id: screenshotId,
         screenshot_sha256,
+        class_id,
         wins,
       })
       .select('id')
