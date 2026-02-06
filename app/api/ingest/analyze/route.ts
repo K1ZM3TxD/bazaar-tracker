@@ -140,7 +140,7 @@ export async function POST(req: Request) {
     const signed_read_url = signed.signedUrl
     const origin = new URL(req.url).origin
 
-       // 4) Vision: wins (send image file)
+    // 4) Vision: wins (send image file)
     const winsForm = new FormData()
     // `file` is the uploaded File from the multipart request
     winsForm.append('image', file, file.name || 'upload.png')
@@ -274,24 +274,23 @@ export async function POST(req: Request) {
       return jsonError('Failed to resolve screenshot_id', 500)
     }
 
-    const submissionPath = 'new submission'
-    console.error('[ingest/analyze] victory_submissions insert', {
-      screenshot_id: screenshotId,
-      screenshot_id_type: typeof screenshotId,
-      submission_path: submissionPath,
+    console.error('[ingest/analyze] resolved class', {
       class_id,
       class_id_type: typeof class_id,
     })
 
+    const submissionPayload = {
+      screenshot_id: screenshotId,
+      screenshot_sha256,
+      class: class_id,
+      wins,
+    }
+    console.error('[ingest/analyze] victory_submissions insert payload', submissionPayload)
+
     // 8) Insert victory_submissions
     const { data: created, error: subInsErr } = await supabase
       .from('victory_submissions')
-      .insert({
-        screenshot_id: screenshotId,
-        screenshot_sha256,
-        class_id,
-        wins,
-      })
+      .insert(submissionPayload)
       .select('id')
       .single()
 
