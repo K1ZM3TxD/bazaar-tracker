@@ -52,6 +52,19 @@ type SlotGroup = {
 
 type CachedHash = { aHash64: string; dHash64: string; pHash64: string; expiresAt: number };
 
+type SlotCropInput = {
+  index?: number;
+  box?: CropBox;
+  pngBase64?: string;
+  pngDataUrl?: string;
+};
+
+type SlotPayload = {
+  imageSize?: { w: number; h: number };
+  slots?: SlotCropInput[];
+  crops?: SlotCropInput[];
+};
+
 // Simple in-memory cache (node runtime). Clears on deploy/restart.
 const ITEM_HASH_CACHE_TTL_MS = 10 * 60 * 1000;
 const itemHashCache = new Map<string, CachedHash>();
@@ -400,6 +413,12 @@ async function imageUrlToTripleHash(
 ): Promise<{ aHash64: string; dHash64: string; pHash64: string }> {
   const bytes = await fetchImageBytes(url, timeoutMs);
 
+  return tripleHashFromBytes(bytes);
+}
+
+async function tripleHashFromBytes(
+  bytes: Buffer
+): Promise<{ aHash64: string; dHash64: string; pHash64: string }> {
   const aBuf = await sharp(bytes)
     .resize(8, 8, { fit: "fill" })
     .grayscale()
@@ -424,34 +443,102 @@ async function imageUrlToTripleHash(
   return { aHash64, dHash64, pHash64 };
 }
 
+function parseSlotPayload(raw: string): { imageSize?: { w: number; h: number }; crops: SlotCropInput[] } {
+  const parsed = JSON.parse(raw) as SlotPayload | SlotCropInput[];
+  if (Array.isArray(parsed)) {
+    return { crops: parsed };
+  }
+  return {
+    imageSize: parsed.imageSize,
+    crops: parsed.slots ?? parsed.crops ?? [],
+  };
+}
+
+function normalizePngBase64(input?: string): string | null {
+  if (!input) return null;
+  const marker = "base64,";
+  const idx = input.indexOf(marker);
+  if (idx >= 0) return input.slice(idx + marker.length);
+  return input;
+}
+
+async function buildSlotsFromCrops(crops: SlotCropInput[]): Promise<SlotFeature[]> {
+  const slots: SlotFeature[] = [];
+  for (let i = 0; i < crops.length; i++) {
+    const crop = crops[i];
+    const base64 =
+      normalizePngBase64(crop.pngBase64) ?? normalizePngBase64(crop.pngDataUrl);
+    if (!base64) {
+      throw new Error(`Slot ${i} missing pngBase64`);
+    }
+    const bytes = Buffer.from(base64, "base64");
+    const { aHash64, dHash64, pHash64 } = await tripleHashFromBytes(bytes);
+    slots.push({
+      index: crop.index ?? i,
+      box: crop.box ?? { left: 0, top: 0, width: 0, height: 0 },
+      aHash64,
+      dHash64,
+      pHash64,
+      autoDetected: false,
+      candidates: [],
+    });
+  }
+  return slots;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
     const file = form.get("image");
+    const slotsField = form.get("slots");
+    const receivedFields = Array.from(form.keys());
 
-    if (!(file instanceof File)) {
+    if (!(file instanceof File) && typeof slotsField !== "string") {
       return NextResponse.json(
-        { error: "Missing form field 'image'" },
+        {
+          error: "Missing form field 'image' or 'slots'",
+          receivedFields,
+        },
         { status: 400 }
       );
     }
 
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const { w, h } = await getImageSize(bytes);
+    let bytes: Buffer | null = null;
+    let imageSize: { w: number; h: number } | null = null;
+    let boxes: CropBox[] = [];
+    let slots: SlotFeature[] = [];
 
-    const boxes = await buildItemIconBoxes(bytes, w, h);
+    if (typeof slotsField === "string") {
+      try {
+        const payload = parseSlotPayload(slotsField);
+        slots = await buildSlotsFromCrops(payload.crops);
+        imageSize = payload.imageSize ?? null;
+        boxes = payload.crops.map(
+          (crop, index) => crop.box ?? { left: index, top: 0, width: 0, height: 0 }
+        );
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Invalid slots JSON" },
+          { status: 400 }
+        );
+      }
+    } else if (file instanceof File) {
+      bytes = Buffer.from(await file.arrayBuffer());
+      const { w, h } = await getImageSize(bytes);
+      imageSize = { w, h };
+      boxes = await buildItemIconBoxes(bytes, w, h);
 
-    const slots: SlotFeature[] = [];
-    for (let i = 0; i < boxes.length; i++) {
-      slots.push({
-        index: i,
-        box: boxes[i],
-        aHash64: await cropToAHash64(bytes, boxes[i]),
-        dHash64: await cropToDHash64(bytes, boxes[i]),
-        pHash64: await cropToPHash64(bytes, boxes[i]),
-        autoDetected: false,
-        candidates: [],
-      });
+      for (let i = 0; i < boxes.length; i++) {
+        slots.push({
+          index: i,
+          box: boxes[i],
+          aHash64: await cropToAHash64(bytes, boxes[i]),
+          dHash64: await cropToDHash64(bytes, boxes[i]),
+          pHash64: await cropToPHash64(bytes, boxes[i]),
+          autoDetected: false,
+          candidates: [],
+        });
+      }
     }
 
     const adjacentDistances = computeAdjacentDistances(slots);
@@ -460,7 +547,7 @@ export async function POST(req: NextRequest) {
     const debugSlotCrops: string[] = [];
     const debugGroupCrops: string[] = [];
 
-    if (debugCropsEnabled) {
+    if (debugCropsEnabled && bytes) {
       for (const b of boxes) {
         debugSlotCrops.push(await cropToPngDataUrl(bytes, b));
       }
@@ -469,14 +556,16 @@ export async function POST(req: NextRequest) {
     let groups = buildGroups(slots);
 
     // Replace representative hash with merged group crop hash (more stable for medium/large items)
-    for (const g of groups) {
-      const mergedBox = mergeSlotBoxes(boxes, g.startSlot, g.span);
-      g.aHash64 = await cropToAHash64(bytes, mergedBox);
-      g.dHash64 = await cropToDHash64(bytes, mergedBox);
-      g.pHash64 = await cropToPHash64(bytes, mergedBox);
+    if (bytes) {
+      for (const g of groups) {
+        const mergedBox = mergeSlotBoxes(boxes, g.startSlot, g.span);
+        g.aHash64 = await cropToAHash64(bytes, mergedBox);
+        g.dHash64 = await cropToDHash64(bytes, mergedBox);
+        g.pHash64 = await cropToPHash64(bytes, mergedBox);
 
-      if (debugCropsEnabled) {
-        debugGroupCrops.push(await cropToPngDataUrl(bytes, mergedBox));
+        if (debugCropsEnabled) {
+          debugGroupCrops.push(await cropToPngDataUrl(bytes, mergedBox));
+        }
       }
     }
 
@@ -484,7 +573,7 @@ export async function POST(req: NextRequest) {
 
     if (!matchingEnabled) {
       return NextResponse.json({
-        imageSize: { w, h },
+        imageSize: imageSize ?? { w: 0, h: 0 },
         slots,
         adjacentDistances,
         groups,
@@ -649,7 +738,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      imageSize: { w, h },
+      imageSize: imageSize ?? { w: 0, h: 0 },
       slots,
       adjacentDistances,
       groups,
