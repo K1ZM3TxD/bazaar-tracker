@@ -207,7 +207,7 @@ export async function POST(req: Request) {
     // 6) Vision: item classify (send image file)
     const classifyForm = new FormData()
     classifyForm.append('image', file, file.name || 'upload.png')
-    classifyForm.append('crops', JSON.stringify(crops))
+    classifyForm.append('slots', JSON.stringify(crops))
 
     const classifyRes = await fetch(`${origin}/api/vision/items/classify`, {
       method: 'POST',
