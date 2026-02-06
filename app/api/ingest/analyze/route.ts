@@ -60,6 +60,11 @@ export async function POST(req: Request) {
     if (!isHex64(screenshot_sha256)) {
       return jsonError('Failed to compute valid screenshot sha256', 500)
     }
+    console.log('[ingest/analyze] computed sha256', {
+      screenshot_sha256,
+      byte_length: bytes.length,
+      mime_type: file.type,
+    })
 
     // 1) Dedupe: if already ingested, return the existing record
     {
@@ -90,6 +95,7 @@ export async function POST(req: Request) {
     const ext =
       (file.type && file.type.includes('/') ? file.type.split('/')[1] : '') || 'png'
     const storage_path = `ingest/${screenshot_sha256}.${ext}`
+    console.log('[ingest/analyze] storage path resolved', { storage_path })
 
     {
       const { error: upErr } = await supabase.storage
@@ -139,6 +145,10 @@ export async function POST(req: Request) {
 
     const signed_read_url = signed.signedUrl
     const origin = new URL(req.url).origin
+    console.log('[ingest/analyze] signed read url ready', {
+      origin,
+      signed_read_url,
+    })
 
     // 4) Vision: wins (send image file)
     const winsForm = new FormData()
@@ -159,6 +169,7 @@ export async function POST(req: Request) {
 
     const winsJson = (await winsRes.json()) as VisionWinsResponse
     const wins = Number(winsJson?.wins)
+    console.log('[ingest/analyze] vision wins response', { wins, winsJson })
 
     if (!Number.isFinite(wins) || wins < 0 || wins > 10) {
       return jsonError('Vision returned invalid wins', 500, winsJson)
@@ -181,6 +192,9 @@ export async function POST(req: Request) {
     }
 
     const slotsJson = (await slotsRes.json()) as VisionItemsExtractResponse
+    console.log('[ingest/analyze] vision slots response', {
+      slot_count: Array.isArray(slotsJson?.slots) ? slotsJson.slots.length : 0,
+    })
 
     // 6) Vision: item classify (send image file)
     const classifyForm = new FormData()
@@ -200,6 +214,9 @@ export async function POST(req: Request) {
 
     const classifyJson = (await classifyRes.json()) as VisionItemsClassifyResponse
     const items = Array.isArray(classifyJson?.items) ? classifyJson.items : []
+    console.log('[ingest/analyze] vision classify response', {
+      item_count: items.length,
+    })
 
     // 6.5) Resolve class (no vision classifier yet). Use a safe default from bazaar_classes.
     const { data: classes, error: classesErr } = await supabase
