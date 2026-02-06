@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabase
     .from('victory_submissions')
-    .select('id,wins,storage_path')
+    .select('id,wins,screenshot_id')
     .eq('screenshot_sha256', sha256)
     .limit(1)
     .maybeSingle()
@@ -31,9 +31,25 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  let storage_path: string | null = null
+  if (data.screenshot_id) {
+    const { data: screenshot, error: screenshotError } = await supabase
+      .from('victory_screenshots')
+      .select('storage_path')
+      .eq('id', data.screenshot_id)
+      .limit(1)
+      .maybeSingle()
+
+    if (screenshotError) {
+      return NextResponse.json({ error: screenshotError.message }, { status: 500 })
+    }
+
+    storage_path = screenshot?.storage_path ?? null
+  }
+
   return NextResponse.json({
     submissionId: data.id,
     wins: data.wins ?? null,
-    storage_path: data.storage_path
+    storage_path
   })
 }
