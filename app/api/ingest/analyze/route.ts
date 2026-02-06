@@ -215,9 +215,11 @@ export async function POST(req: Request) {
     })
 
     if (!classifyRes.ok) {
+      const classifyBody = await classifyRes.text()
+      console.log('[ingest/analyze] classify 400 body', classifyBody)
       return jsonError('Vision item classify failed', 500, {
         status: classifyRes.status,
-        body: await classifyRes.text(),
+        body: classifyBody,
       })
     }
 
