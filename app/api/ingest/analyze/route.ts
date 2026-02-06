@@ -209,6 +209,7 @@ export async function POST(req: Request) {
     classifyForm.append('image', file, file.name || 'upload.png')
     classifyForm.append('slots', JSON.stringify(crops))
 
+    // Do not set Content-Type; fetch will set the multipart boundary for FormData.
     const classifyRes = await fetch(`${origin}/api/vision/items/classify`, {
       method: 'POST',
       body: classifyForm,
