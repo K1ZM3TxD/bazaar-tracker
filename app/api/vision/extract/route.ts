@@ -69,21 +69,40 @@ async function computeBannerHash(bytes: Buffer): Promise<string> {
   return hex;
 }
 
-function classifyWinsFromHash(hash: string): { wins: number | null; bestDist: number } {
-  let best: { wins: number; dist: number } | null = null;
+function classifyWinsFromHash(hash: string): { wins: number | null; bestDist: number; bestHash: string | null } {
+  let best: { wins: number; dist: number; hash: string } | null = null;
 
   for (const [h, w] of Object.entries(KNOWN_BANNER_HASH_TO_WINS)) {
     const dist = hammingHex(hash, h);
-    if (!best || dist < best.dist) best = { wins: w, dist };
+    if (!best || dist < best.dist) best = { wins: w, dist, hash: h };
   }
 
   // Confidence gate: require a close match
-  if (!best) return { wins: null, bestDist: 9999 };
-  if (best.dist > 6) return { wins: null, bestDist: best.dist };
-  return { wins: best.wins, bestDist: best.dist };
+  if (!best) return { wins: null, bestDist: 9999, bestHash: null };
+  if (best.dist > 6) return { wins: null, bestDist: best.dist, bestHash: best.hash };
+  return { wins: best.wins, bestDist: best.dist, bestHash: best.hash };
 }
 
 // -----------------------------------------------------------------------------
+// Exported helper for server-side modules (ingest pipeline) to avoid HTTP self-calls.
+// This is the canonical symbol expected by app/api/ingest/analyze/route.ts
+// -----------------------------------------------------------------------------
+export async function extractWinsFromBytes(bytes: Buffer): Promise<{
+  wins: number | null;
+  bannerHash: string;
+  bannerBestDist: number;
+  bannerBestHash: string | null;
+}> {
+  const bannerHash = await computeBannerHash(bytes);
+  const classified = classifyWinsFromHash(bannerHash);
+
+  return {
+    wins: classified.wins,
+    bannerHash,
+    bannerBestDist: classified.bestDist,
+    bannerBestHash: classified.bestHash,
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -96,12 +115,10 @@ export async function POST(req: NextRequest) {
 
     const bytes = Buffer.from(await file.arrayBuffer());
 
-    // Banner classification path
-    const bannerHash = await computeBannerHash(bytes);
-    const classified = classifyWinsFromHash(bannerHash);
+    const result = await extractWinsFromBytes(bytes);
 
     // If classification did not match, do NOT guess; keep null and let UI manual wins stand.
-    const wins = classified.wins;
+    const wins = result.wins;
 
     // TEMP DEBUG: allow retrieving bannerHash for mapping
     const debugParam = req.nextUrl.searchParams.get("debug");
@@ -112,8 +129,9 @@ export async function POST(req: NextRequest) {
     if (debugParam === "diag") {
       return NextResponse.json({
         wins,
-        bannerHash,
-        bannerBestDist: classified.bestDist,
+        bannerHash: result.bannerHash,
+        bannerBestDist: result.bannerBestDist,
+        bannerBestHash: result.bannerBestHash,
         diag: {
           debugParam,
           formDebug,
@@ -133,16 +151,14 @@ export async function POST(req: NextRequest) {
     if (debug) {
       return NextResponse.json({
         wins,
-        bannerHash,
-        bannerBestDist: classified.bestDist,
+        bannerHash: result.bannerHash,
+        bannerBestDist: result.bannerBestDist,
+        bannerBestHash: result.bannerBestHash,
       });
     }
 
     return NextResponse.json({ wins });
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err?.message || "Vision extract failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err?.message || "Vision extract failed" }, { status: 500 });
   }
 }
