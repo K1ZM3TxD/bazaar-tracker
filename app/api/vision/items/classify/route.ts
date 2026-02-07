@@ -16,6 +16,27 @@ export const runtime = "nodejs";
 //
 // Enable matching with: ITEM_CLASSIFY_MATCHING=1
 
+// -----------------------------------------------------------------------------
+// Classification Contract (v1) — Skeleton + Slot-level ambiguity semantics
+// -----------------------------------------------------------------------------
+//
+// Ambiguity is expressed at the candidate level.
+// Multiple candidates for the same slot_index imply slot-level ambiguity.
+//
+// Global status rules (deterministic):
+// - disabled   → classification intentionally skipped
+// - no_matches → zero candidates across all slots
+// - matches    → every slot has ≤ 1 candidate AND at least one candidate exists
+// - ambiguous  → any slot has > 1 candidate
+//
+// Deterministic skeleton trigger (query param):
+// - ?mode=disabled  → status "disabled", empty candidates
+// - ?mode=no_matches → status "no_matches", empty candidates
+// - ?mode=ambiguous → slot 0 has TWO candidates (same slot_index, different id), confidence=0.5
+//   other slots have zero candidates, global status "ambiguous"
+//
+// IMPORTANT: When ?mode is provided, we do NOT call Supabase or do any matching work.
+
 type CropBox = { left: number; top: number; width: number; height: number };
 
 type Candidate = {
@@ -50,20 +71,39 @@ type SlotGroup = {
   ambiguous?: boolean;
 };
 
+// Contract types
+type ClassificationCandidate = {
+  kind: "item" | "class";
+  id: string;
+  label: string;
+  confidence: number;
+  source: string;
+  slot_index: number;
+  meta: Record<string, any>;
+};
+
+type ClassificationEvidenceSignal = {
+  source: string;
+  type: string;
+  value: string;
+  weight: number;
+  meta: Record<string, any>;
+};
+
+type ClassificationContractV1 = {
+  version: 1;
+  status: "disabled" | "no_matches" | "matches" | "ambiguous";
+  candidates: {
+    items: ClassificationCandidate[];
+    class: ClassificationCandidate[];
+  };
+  evidence: {
+    signals: ClassificationEvidenceSignal[];
+    notes: string[];
+  };
+};
+
 type CachedHash = { aHash64: string; dHash64: string; pHash64: string; expiresAt: number };
-
-type SlotCropInput = {
-  index?: number;
-  box?: CropBox;
-  pngBase64?: string;
-  pngDataUrl?: string;
-};
-
-type SlotPayload = {
-  imageSize?: { w: number; h: number };
-  slots?: SlotCropInput[];
-  crops?: SlotCropInput[];
-};
 
 // Simple in-memory cache (node runtime). Clears on deploy/restart.
 const ITEM_HASH_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -81,6 +121,65 @@ const GROUP_MERGE_MAX_ADJ_DIST = 20; // <=20 treated as same physical item regio
 // We suppress auto-detect for that dominant item unless its margin is meaningfully stronger.
 const DOMINANT_BEST_COUNT = 2;
 const DOMINANT_MARGIN_BONUS = 2; // requires margin >= MIN_AUTODETECT_MARGIN + bonus
+
+function buildEmptyContract(status: ClassificationContractV1["status"], modeValue: string): ClassificationContractV1 {
+  return {
+    version: 1,
+    status,
+    candidates: { items: [], class: [] },
+    evidence: {
+      signals: [
+        {
+          source: "skeleton",
+          type: "mode",
+          value: modeValue,
+          weight: 1,
+          meta: {},
+        },
+      ],
+      notes: [],
+    },
+  };
+}
+
+function deriveStatusFromCandidates(
+  items: ClassificationCandidate[],
+  isDisabled: boolean
+): ClassificationContractV1["status"] {
+  if (isDisabled) return "disabled";
+  if (items.length === 0) return "no_matches";
+
+  const bySlot = new Map<number, number>();
+  for (const c of items) {
+    bySlot.set(c.slot_index, (bySlot.get(c.slot_index) ?? 0) + 1);
+  }
+  for (const [, count] of bySlot) {
+    if (count > 1) return "ambiguous";
+  }
+  return "matches";
+}
+
+function candidatesFromGroups(groups: SlotGroup[]): ClassificationCandidate[] {
+  const out: ClassificationCandidate[] = [];
+  for (const g of groups) {
+    for (const c of g.candidates ?? []) {
+      out.push({
+        kind: "item",
+        id: String(c.itemId),
+        label: c.name,
+        // Contract-only: no confidence heuristics. Preserve score in meta.
+        confidence: 0.0,
+        source: "hash_match",
+        slot_index: g.startSlot,
+        meta: {
+          score: c.score,
+          group_span: g.span,
+        },
+      });
+    }
+  }
+  return out;
+}
 
 async function getImageSize(bytes: Buffer): Promise<{ w: number; h: number }> {
   const meta = await sharp(bytes).metadata();
@@ -181,11 +280,7 @@ async function buildItemIconBoxes(bytes: Buffer, w: number, h: number): Promise<
   return boxes;
 }
 
-function mergeSlotBoxes(
-  boxes: CropBox[],
-  startSlot: number,
-  span: 1 | 2 | 3 | 4
-): CropBox {
+function mergeSlotBoxes(boxes: CropBox[], startSlot: number, span: 1 | 2 | 3 | 4): CropBox {
   const first = boxes[startSlot];
   const last = boxes[startSlot + span - 1];
 
@@ -351,8 +446,7 @@ function buildGroups(slots: SlotFeature[]): SlotGroup[] {
 
     if (
       i + 1 < slots.length &&
-      hammingDistanceHex64(slots[i].aHash64, slots[i + 1].aHash64) <=
-        GROUP_MERGE_MAX_ADJ_DIST
+      hammingDistanceHex64(slots[i].aHash64, slots[i + 1].aHash64) <= GROUP_MERGE_MAX_ADJ_DIST
     ) {
       span = 2;
     }
@@ -360,8 +454,7 @@ function buildGroups(slots: SlotFeature[]): SlotGroup[] {
     if (
       span === 2 &&
       i + 2 < slots.length &&
-      hammingDistanceHex64(slots[i + 1].aHash64, slots[i + 2].aHash64) <=
-        GROUP_MERGE_MAX_ADJ_DIST
+      hammingDistanceHex64(slots[i + 1].aHash64, slots[i + 2].aHash64) <= GROUP_MERGE_MAX_ADJ_DIST
     ) {
       span = 3;
     }
@@ -369,8 +462,7 @@ function buildGroups(slots: SlotFeature[]): SlotGroup[] {
     if (
       span === 3 &&
       i + 3 < slots.length &&
-      hammingDistanceHex64(slots[i + 2].aHash64, slots[i + 3].aHash64) <=
-        GROUP_MERGE_MAX_ADJ_DIST
+      hammingDistanceHex64(slots[i + 2].aHash64, slots[i + 3].aHash64) <= GROUP_MERGE_MAX_ADJ_DIST
     ) {
       span = 4;
     }
@@ -413,12 +505,6 @@ async function imageUrlToTripleHash(
 ): Promise<{ aHash64: string; dHash64: string; pHash64: string }> {
   const bytes = await fetchImageBytes(url, timeoutMs);
 
-  return tripleHashFromBytes(bytes);
-}
-
-async function tripleHashFromBytes(
-  bytes: Buffer
-): Promise<{ aHash64: string; dHash64: string; pHash64: string }> {
   const aBuf = await sharp(bytes)
     .resize(8, 8, { fit: "fill" })
     .grayscale()
@@ -443,139 +529,35 @@ async function tripleHashFromBytes(
   return { aHash64, dHash64, pHash64 };
 }
 
-function parseSlotPayload(raw: string): { imageSize?: { w: number; h: number }; crops: SlotCropInput[] } {
-  const parsed = JSON.parse(raw) as SlotPayload | SlotCropInput[];
-  if (Array.isArray(parsed)) {
-    return { crops: parsed };
-  }
-  return {
-    imageSize: parsed.imageSize,
-    crops: parsed.slots ?? parsed.crops ?? [],
-  };
-}
-
-function normalizePngBase64(input?: string): string | null {
-  if (!input) return null;
-  const marker = "base64,";
-  const idx = input.indexOf(marker);
-  if (idx >= 0) return input.slice(idx + marker.length);
-  return input;
-}
-
-async function buildSlotsFromCrops(crops: SlotCropInput[]): Promise<SlotFeature[]> {
-  const slots: SlotFeature[] = [];
-  for (let i = 0; i < crops.length; i++) {
-    const crop = crops[i];
-    const base64 =
-      normalizePngBase64(crop.pngBase64) ?? normalizePngBase64(crop.pngDataUrl);
-    if (!base64) {
-      throw new Error(`Slot ${i} missing pngBase64`);
-    }
-    const bytes = Buffer.from(base64, "base64");
-    const { aHash64, dHash64, pHash64 } = await tripleHashFromBytes(bytes);
-    slots.push({
-      index: crop.index ?? i,
-      box: crop.box ?? { left: 0, top: 0, width: 0, height: 0 },
-      aHash64,
-      dHash64,
-      pHash64,
-      autoDetected: false,
-      candidates: [],
-    });
-  }
-  return slots;
-}
-
 export async function POST(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const modeRaw = (searchParams.get("mode") ?? "").toLowerCase();
+    const mode = modeRaw === "disabled" || modeRaw === "ambiguous" || modeRaw === "no_matches" ? modeRaw : null;
+
     const form = await req.formData();
     const file = form.get("image");
-    const slotsField = form.get("slots");
-    const cropsField = form.get("crops");
-    const receivedFields = Array.from(form.keys());
 
-    const slotsPayload =
-      typeof slotsField === "string"
-        ? slotsField
-        : typeof cropsField === "string"
-          ? cropsField
-          : null;
-
-    if (!(file instanceof File) && !slotsPayload) {
-      return NextResponse.json(
-        {
-          error: "Missing form field 'image' or 'slots'",
-          receivedFields,
-        },
-        { status: 400 }
-      );
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "Missing form field 'image'" }, { status: 400 });
     }
 
-    let bytes: Buffer | null = null;
-    let imageSize: { w: number; h: number } | null = null;
-    let boxes: CropBox[] = [];
-    let slots: SlotFeature[] = [];
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const { w, h } = await getImageSize(bytes);
 
-    if (file instanceof File) {
-      bytes = Buffer.from(await file.arrayBuffer());
-    }
+    const boxes = await buildItemIconBoxes(bytes, w, h);
 
-    if (slotsPayload) {
-      try {
-        const payload = parseSlotPayload(slotsPayload);
-        imageSize = payload.imageSize ?? null;
-
-        if (bytes) {
-          if (!imageSize) {
-            const size = await getImageSize(bytes);
-            imageSize = { w: size.w, h: size.h };
-          }
-          const { w, h } = imageSize ?? { w: 0, h: 0 };
-          boxes = payload.crops.map((crop, index) => {
-            if (!crop.box) {
-              throw new Error(`Slot ${index} missing box`);
-            }
-            return clampBox(crop.box, w, h);
-          });
-          for (let i = 0; i < boxes.length; i++) {
-            slots.push({
-              index: payload.crops[i]?.index ?? i,
-              box: boxes[i],
-              aHash64: await cropToAHash64(bytes, boxes[i]),
-              dHash64: await cropToDHash64(bytes, boxes[i]),
-              pHash64: await cropToPHash64(bytes, boxes[i]),
-              autoDetected: false,
-              candidates: [],
-            });
-          }
-        } else {
-          slots = await buildSlotsFromCrops(payload.crops);
-          boxes = payload.crops.map(
-            (crop, index) => crop.box ?? { left: index, top: 0, width: 0, height: 0 }
-          );
-        }
-      } catch (err: any) {
-        return NextResponse.json(
-          { error: err?.message || "Invalid slots JSON" },
-          { status: 400 }
-        );
-      }
-    } else if (file instanceof File) {
-      const { w, h } = await getImageSize(bytes);
-      imageSize = { w, h };
-      boxes = await buildItemIconBoxes(bytes, w, h);
-
-      for (let i = 0; i < boxes.length; i++) {
-        slots.push({
-          index: i,
-          box: boxes[i],
-          aHash64: await cropToAHash64(bytes, boxes[i]),
-          dHash64: await cropToDHash64(bytes, boxes[i]),
-          pHash64: await cropToPHash64(bytes, boxes[i]),
-          autoDetected: false,
-          candidates: [],
-        });
-      }
+    const slots: SlotFeature[] = [];
+    for (let i = 0; i < boxes.length; i++) {
+      slots.push({
+        index: i,
+        box: boxes[i],
+        aHash64: await cropToAHash64(bytes, boxes[i]),
+        dHash64: await cropToDHash64(bytes, boxes[i]),
+        pHash64: await cropToPHash64(bytes, boxes[i]),
+        autoDetected: false,
+        candidates: [],
+      });
     }
 
     const adjacentDistances = computeAdjacentDistances(slots);
@@ -584,7 +566,7 @@ export async function POST(req: NextRequest) {
     const debugSlotCrops: string[] = [];
     const debugGroupCrops: string[] = [];
 
-    if (debugCropsEnabled && bytes) {
+    if (debugCropsEnabled) {
       for (const b of boxes) {
         debugSlotCrops.push(await cropToPngDataUrl(bytes, b));
       }
@@ -593,33 +575,102 @@ export async function POST(req: NextRequest) {
     let groups = buildGroups(slots);
 
     // Replace representative hash with merged group crop hash (more stable for medium/large items)
-    if (bytes) {
-      for (const g of groups) {
-        const mergedBox = mergeSlotBoxes(boxes, g.startSlot, g.span);
-        g.aHash64 = await cropToAHash64(bytes, mergedBox);
-        g.dHash64 = await cropToDHash64(bytes, mergedBox);
-        g.pHash64 = await cropToPHash64(bytes, mergedBox);
+    for (const g of groups) {
+      const mergedBox = mergeSlotBoxes(boxes, g.startSlot, g.span);
+      g.aHash64 = await cropToAHash64(bytes, mergedBox);
+      g.dHash64 = await cropToDHash64(bytes, mergedBox);
+      g.pHash64 = await cropToPHash64(bytes, mergedBox);
 
-        if (debugCropsEnabled) {
-          debugGroupCrops.push(await cropToPngDataUrl(bytes, mergedBox));
-        }
+      if (debugCropsEnabled) {
+        debugGroupCrops.push(await cropToPngDataUrl(bytes, mergedBox));
       }
     }
 
-    const matchingEnabled = process.env.ITEM_CLASSIFY_MATCHING === "1";
+    // Skeleton override: ?mode=disabled | ?mode=no_matches | ?mode=ambiguous
+    if (mode) {
+      let classification: ClassificationContractV1;
 
-    if (!matchingEnabled) {
+      if (mode === "disabled") {
+        classification = buildEmptyContract("disabled", "disabled");
+      } else if (mode === "no_matches") {
+        classification = buildEmptyContract("no_matches", "no_matches");
+      } else {
+        // ambiguous: slot 0 gets two candidates (same slot_index, different id), confidence=0.5
+        const items: ClassificationCandidate[] = [
+          {
+            kind: "item",
+            id: "unknown_item_a",
+            label: "Unknown Item",
+            confidence: 0.5,
+            source: "skeleton",
+            slot_index: 0,
+            meta: {},
+          },
+          {
+            kind: "item",
+            id: "unknown_item_b",
+            label: "Unknown Item",
+            confidence: 0.5,
+            source: "skeleton",
+            slot_index: 0,
+            meta: {},
+          },
+        ];
+
+        classification = {
+          version: 1,
+          status: "ambiguous",
+          candidates: { items, class: [] },
+          evidence: {
+            signals: [
+              {
+                source: "skeleton",
+                type: "mode",
+                value: "ambiguous",
+                weight: 1,
+                meta: {},
+              },
+            ],
+            notes: [],
+          },
+        };
+      }
+
       return NextResponse.json({
-        imageSize: imageSize ?? { w: 0, h: 0 },
+        imageSize: { w, h },
         slots,
         adjacentDistances,
         groups,
         groupMergeMaxAdjDist: GROUP_MERGE_MAX_ADJ_DIST,
         matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null,
         matchingEnabled: false,
-        ...(debugCropsEnabled
-          ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } }
-          : {}),
+        classification,
+        ...(debugCropsEnabled ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } } : {}),
+      });
+    }
+
+    const matchingEnabled = process.env.ITEM_CLASSIFY_MATCHING === "1";
+
+    if (!matchingEnabled) {
+      const classification = buildEmptyContract("disabled", "env_disabled");
+      classification.evidence.signals.push({
+        source: "hash_match",
+        type: "env",
+        value: "ITEM_CLASSIFY_MATCHING!=1",
+        weight: 1,
+        meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
+      });
+
+      return NextResponse.json({
+        imageSize: { w, h },
+        slots,
+        adjacentDistances,
+        groups,
+        groupMergeMaxAdjDist: GROUP_MERGE_MAX_ADJ_DIST,
+        matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null,
+        matchingEnabled: false,
+        classification,
+        ...(debugCropsEnabled ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } } : {}),
       });
     }
 
@@ -633,10 +684,7 @@ export async function POST(req: NextRequest) {
       .limit(MAX_ITEMS);
 
     if (error) {
-      return NextResponse.json(
-        { error: `Supabase bazaar_items query failed: ${error.message}` },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: `Supabase bazaar_items query failed: ${error.message}` }, { status: 500 });
     }
 
     const FETCH_TIMEOUT_MS = 8000;
@@ -644,21 +692,13 @@ export async function POST(req: NextRequest) {
     const MAX_HASHED = 300;
     const HASH_CONCURRENCY = 6;
 
-    const itemHashes: {
-      id: number;
-      name: string;
-      aHash64: string;
-      dHash64: string;
-      pHash64: string;
-    }[] = [];
+    const itemHashes: { id: number; name: string; aHash64: string; dHash64: string; pHash64: string }[] = [];
 
     const candidates = (items ?? []).filter((it) => !!it?.source_image_url);
 
     async function hashOne(
       it: any
-    ): Promise<
-      { id: number; name: string; aHash64: string; dHash64: string; pHash64: string } | null
-    > {
+    ): Promise<{ id: number; name: string; aHash64: string; dHash64: string; pHash64: string } | null> {
       try {
         const now = Date.now();
         const cacheKey = it.source_image_url as string;
@@ -676,12 +716,7 @@ export async function POST(req: NextRequest) {
           aHash64 = h.aHash64;
           dHash64 = h.dHash64;
           pHash64 = h.pHash64;
-          itemHashCache.set(cacheKey, {
-            aHash64,
-            dHash64,
-            pHash64,
-            expiresAt: now + ITEM_HASH_CACHE_TTL_MS,
-          });
+          itemHashCache.set(cacheKey, { aHash64, dHash64, pHash64, expiresAt: now + ITEM_HASH_CACHE_TTL_MS });
         }
 
         return { id: it.id, name: it.name, aHash64, dHash64, pHash64 };
@@ -690,11 +725,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    for (
-      let i = 0;
-      i < candidates.length && itemHashes.length < MAX_HASHED;
-      i += HASH_CONCURRENCY
-    ) {
+    for (let i = 0; i < candidates.length && itemHashes.length < MAX_HASHED; i += HASH_CONCURRENCY) {
       const batch = candidates.slice(i, i + HASH_CONCURRENCY);
       const results = await Promise.all(batch.map(hashOne));
       for (const r of results) {
@@ -710,14 +741,7 @@ export async function POST(req: NextRequest) {
     for (const g of groups) {
       const scored: Candidate[] = [];
       for (const it of itemHashes) {
-        const score = scoreTripleHash(
-          g.aHash64,
-          g.dHash64,
-          g.pHash64,
-          it.aHash64,
-          it.dHash64,
-          it.pHash64
-        );
+        const score = scoreTripleHash(g.aHash64, g.dHash64, g.pHash64, it.aHash64, it.dHash64, it.pHash64);
         scored.push({ itemId: it.id, name: it.name, score });
       }
       scored.sort((a, b) => b.score - a.score);
@@ -774,8 +798,33 @@ export async function POST(req: NextRequest) {
       g.autoDetected = !!newBest && newBest.score >= MIN_SCORE_AUTODETECT && newMarginOk;
     }
 
+    // Contract output (derived from current candidate lists; no confidence heuristics)
+    const contractItems = candidatesFromGroups(groups);
+    const derivedStatus = deriveStatusFromCandidates(contractItems, false);
+
+    const classification: ClassificationContractV1 = {
+      version: 1,
+      status: derivedStatus,
+      candidates: {
+        items: contractItems,
+        class: [],
+      },
+      evidence: {
+        signals: [
+          {
+            source: "hash_match",
+            type: "env",
+            value: "ITEM_CLASSIFY_MATCHING=1",
+            weight: 1,
+            meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
+          },
+        ],
+        notes: [],
+      },
+    };
+
     return NextResponse.json({
-      imageSize: imageSize ?? { w: 0, h: 0 },
+      imageSize: { w, h },
       slots,
       adjacentDistances,
       groups,
@@ -784,14 +833,10 @@ export async function POST(req: NextRequest) {
       matchingEnabled: true,
       itemCount: items?.length ?? 0,
       hashedItemCount: itemHashes.length,
-      ...(debugCropsEnabled
-        ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } }
-        : {}),
+      classification,
+      ...(debugCropsEnabled ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } } : {}),
     });
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err?.message || "Item classify failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err?.message || "Item classify failed" }, { status: 500 });
   }
 }
