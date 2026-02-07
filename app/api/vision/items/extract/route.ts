@@ -8,7 +8,17 @@ export const runtime = "nodejs";
 // Returns crops only (no OCR, no DB matching).
 // Output: { imageSize, crops: [{ index, box, pngBase64 }] }
 
-type CropBox = { left: number; top: number; width: number; height: number };
+export type CropBox = { left: number; top: number; width: number; height: number };
+
+export type VisionItemsExtractResponse = {
+  imageSize?: { w: number; h: number };
+  crops: Array<{
+    index: number;
+    box?: CropBox;
+    pngBase64?: string;
+    image_base64?: string;
+  }>;
+};
 
 type CropOut = {
   index: number;
@@ -73,37 +83,37 @@ async function cropToPngBase64(bytes: Buffer, box: CropBox): Promise<string> {
   return png.toString("base64");
 }
 
+// NEW: Local/in-process API for ingest (no external server, no fetch).
+export async function extractItemCropsFromBytes(bytes: Buffer): Promise<VisionItemsExtractResponse> {
+  const { w, h } = await getImageSize(bytes);
+  const boxes = buildItemSlotBoxes(w, h);
+
+  const crops: CropOut[] = [];
+  for (let i = 0; i < boxes.length; i++) {
+    crops.push({
+      index: i,
+      box: boxes[i],
+      pngBase64: await cropToPngBase64(bytes, boxes[i]),
+    });
+  }
+
+  return { imageSize: { w, h }, crops };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
     const file = form.get("image");
 
     if (!(file instanceof File)) {
-      return NextResponse.json(
-        { error: "Missing form field 'image'" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing form field 'image'" }, { status: 400 });
     }
 
     const bytes = Buffer.from(await file.arrayBuffer());
-    const { w, h } = await getImageSize(bytes);
+    const result = await extractItemCropsFromBytes(bytes);
 
-    const boxes = buildItemSlotBoxes(w, h);
-
-    const crops: CropOut[] = [];
-    for (let i = 0; i < boxes.length; i++) {
-      crops.push({
-        index: i,
-        box: boxes[i],
-        pngBase64: await cropToPngBase64(bytes, boxes[i]),
-      });
-    }
-
-    return NextResponse.json({ imageSize: { w, h }, crops });
+    return NextResponse.json(result);
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err?.message || "Item extract failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err?.message || "Item extract failed" }, { status: 500 });
   }
 }
