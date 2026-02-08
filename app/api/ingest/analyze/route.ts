@@ -6,6 +6,7 @@ import {
   extractItemCropsFromBytes,
   type VisionItemsExtractResponse as ItemsExtractResponse,
 } from "../../vision/items/extract/route";
+import { POST as classifyItemsPost } from "../../vision/items/classify/route";
 
 type BazaarClass = {
   id: string | number;
@@ -13,14 +14,37 @@ type BazaarClass = {
 };
 
 function jsonError(message: string, status = 500, extra?: any) {
-  return NextResponse.json(
-    { ok: false, error: message, ...(extra ? { extra } : {}) },
-    { status }
-  );
+  return NextResponse.json({ ok: false, error: message, ...(extra ? { extra } : {}) }, { status });
 }
 
 function isHex64(s: string) {
   return /^[0-9a-f]{64}$/i.test(s);
+}
+
+function parseMode(modeRaw: string | null): "disabled" | "no_matches" | "ambiguous" | "class_candidates" | null {
+  const m = (modeRaw ?? "").trim().toLowerCase();
+  return m === "disabled" || m === "no_matches" || m === "ambiguous" || m === "class_candidates" ? m : null;
+}
+
+async function runClassificationMode(bytes: Buffer, ext: string, contentType: string, mode: string) {
+  // Call the local route handler directly with a Request that includes ?mode=
+  const url = new URL("http://local/api/vision/items/classify");
+  url.searchParams.set("mode", mode);
+
+  const fd = new FormData();
+  // classify route expects field "image"
+  fd.set("image", new File([bytes], `upload.${ext}`, { type: contentType }));
+
+  const req = new Request(url.toString(), { method: "POST", body: fd }) as any;
+  const res: any = await classifyItemsPost(req);
+
+  const body = await res.json().catch(() => null);
+
+  if (!res?.ok) {
+    return { ok: false as const, body };
+  }
+
+  return { ok: true as const, classification: body?.classification ?? null, body };
 }
 
 export async function POST(req: Request) {
@@ -36,6 +60,9 @@ export async function POST(req: Request) {
       auth: { persistSession: false },
     });
 
+    const { searchParams } = new URL(req.url);
+    const mode = parseMode(searchParams.get("mode"));
+
     const form = await req.formData();
     const file = form.get("file") as File | null;
     if (!file) {
@@ -49,32 +76,87 @@ export async function POST(req: Request) {
       return jsonError("Invalid screenshot sha256", 500);
     }
 
-    // Deduplicate early
-    const { data: existing } = await supabase
+    // Deduplicate early (but make classification behavior explicit/observable when mode is provided)
+    const { data: existing, error: existingErr } = await supabase
       .from("victory_submissions")
-      .select("id, wins, screenshot_sha256")
+      .select("id, wins, screenshot_sha256, classification_result")
       .eq("screenshot_sha256", screenshot_sha256)
       .maybeSingle();
 
+    if (existingErr) {
+      return jsonError("Supabase victory_submissions query failed", 500, {
+        where: "victory_submissions.select",
+        message: existingErr.message,
+      });
+    }
+
     if (existing?.id) {
+      // Deterministic dedupe semantics:
+      // - If mode provided: recompute + persist classification_result (observable)
+      // - Else: do not recompute (explicit)
+      if (mode) {
+        const ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
+        const contentType = file.type || "image/png";
+
+        const classified = await runClassificationMode(bytes, ext, contentType, mode);
+        if (!classified.ok) {
+          return jsonError("Item classify (mode) returned error", 500, {
+            where: "vision.items.classify",
+            mode,
+            body: classified.body ?? null,
+          });
+        }
+
+        const classification_result = classified.classification ?? null;
+
+        const { error: updErr } = await supabase
+          .from("victory_submissions")
+          .update({ classification_result })
+          .eq("id", existing.id);
+
+        if (updErr) {
+          return jsonError("Failed to update classification_result on deduped submission", 500, {
+            where: "victory_submissions.update",
+            message: updErr.message,
+          });
+        }
+
+        return NextResponse.json({
+          ok: true,
+          deduped: true,
+          submissionId: existing.id,
+          wins: existing.wins,
+          screenshot_sha256: existing.screenshot_sha256,
+          classificationRecomputed: true,
+        });
+      }
+
       return NextResponse.json({
         ok: true,
         deduped: true,
         submissionId: existing.id,
         wins: existing.wins,
         screenshot_sha256: existing.screenshot_sha256,
+        classificationRecomputed: false,
       });
     }
 
     // Upload screenshot
-    const ext =
-      (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
+    const ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
+    const contentType = file.type || "image/png";
     const storage_path = `ingest/${screenshot_sha256}.${ext}`;
 
-    await supabase.storage.from("victory_screenshots").upload(storage_path, bytes, {
-      contentType: file.type || "image/png",
+    const { error: uploadErr } = await supabase.storage.from("victory_screenshots").upload(storage_path, bytes, {
+      contentType,
       upsert: true,
     });
+
+    if (uploadErr) {
+      return jsonError("Failed to upload screenshot to storage", 500, {
+        where: "victory_screenshots.upload",
+        message: uploadErr.message,
+      });
+    }
 
     // Wins extraction (required; no silent fallback)
     let wins: number;
@@ -105,15 +187,38 @@ export async function POST(req: Request) {
       itemCrops = null;
     }
 
+    // Classification persistence (only when mode is explicitly requested)
+    let classification_result: any = null;
+    let classificationRecomputed = false;
+
+    if (mode) {
+      const classified = await runClassificationMode(bytes, ext, contentType, mode);
+      if (!classified.ok) {
+        return jsonError("Item classify (mode) returned error", 500, {
+          where: "vision.items.classify",
+          mode,
+          body: classified.body ?? null,
+        });
+      }
+      classification_result = classified.classification ?? null;
+      classificationRecomputed = true;
+    }
+
     // Determine class (fallback)
-    const { data: classes } = await supabase
+    const { data: classes, error: classesErr } = await supabase
       .from("bazaar_classes")
       .select("id, name")
       .order("created_at", { ascending: true });
 
+    if (classesErr) {
+      return jsonError("Supabase bazaar_classes query failed", 500, {
+        where: "bazaar_classes.select",
+        message: classesErr.message,
+      });
+    }
+
     const defaultClass: BazaarClass =
-      classes?.find((c: any) => (c?.name || "").toLowerCase() === "unknown") ??
-      classes?.[0];
+      classes?.find((c: any) => (c?.name || "").toLowerCase() === "unknown") ?? classes?.[0];
 
     if (!defaultClass?.id) {
       return jsonError("Missing bazaar class", 500);
@@ -121,16 +226,24 @@ export async function POST(req: Request) {
 
     const screenshotId = crypto.randomUUID();
 
-    await supabase.from("victory_screenshots").insert({
+    const { error: screenshotInsertErr } = await supabase.from("victory_screenshots").insert({
       id: screenshotId,
       storage_path,
     });
+
+    if (screenshotInsertErr) {
+      return jsonError("Failed to insert victory_screenshots", 500, {
+        where: "victory_screenshots.insert",
+        message: screenshotInsertErr.message,
+      });
+    }
 
     const submissionPayload = {
       screenshot_id: screenshotId,
       screenshot_sha256,
       class: defaultClass.id,
       wins,
+      classification_result: classification_result ?? null,
     };
 
     const { data: created, error: subErr } = await supabase
@@ -142,8 +255,7 @@ export async function POST(req: Request) {
     if (subErr || !created?.id) {
       const rawErr: any = subErr as any;
       const combined = `${rawErr?.message ?? ""} ${rawErr?.details ?? ""}`;
-      const parsedConstraint =
-        rawErr?.constraint ?? combined.match(/constraint "([^"]+)"/i)?.[1] ?? null;
+      const parsedConstraint = rawErr?.constraint ?? combined.match(/constraint "([^"]+)"/i)?.[1] ?? null;
 
       const errObj = {
         where: "victory_submissions.insert",
@@ -157,7 +269,6 @@ export async function POST(req: Request) {
       };
 
       console.error("victory_submissions insert failed", errObj);
-
       return jsonError("Failed to insert victory_submissions", 500, errObj);
     }
 
@@ -168,6 +279,7 @@ export async function POST(req: Request) {
       wins,
       storage_path,
       screenshot_sha256,
+      classificationRecomputed,
       // Observability only (not persisted here)
       itemCrops: itemCrops ?? null,
     });

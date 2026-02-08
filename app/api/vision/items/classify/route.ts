@@ -23,17 +23,20 @@ export const runtime = "nodejs";
 // Ambiguity is expressed at the candidate level.
 // Multiple candidates for the same slot_index imply slot-level ambiguity.
 //
-// Global status rules (deterministic):
+// Global status rules (deterministic) — item candidates:
 // - disabled   → classification intentionally skipped
-// - no_matches → zero candidates across all slots
-// - matches    → every slot has ≤ 1 candidate AND at least one candidate exists
-// - ambiguous  → any slot has > 1 candidate
+// - no_matches → zero item candidates across all slots
+// - matches    → every slot has ≤ 1 item candidate AND at least one item candidate exists
+// - ambiguous  → any slot has > 1 item candidate
 //
-// Deterministic skeleton trigger (query param):
-// - ?mode=disabled  → status "disabled", empty candidates
-// - ?mode=no_matches → status "no_matches", empty candidates
-// - ?mode=ambiguous → slot 0 has TWO candidates (same slot_index, different id), confidence=0.5
-//   other slots have zero candidates, global status "ambiguous"
+// Deterministic skeleton triggers (query param):
+// - ?mode=disabled         → status "disabled", empty candidates
+// - ?mode=no_matches       → status "no_matches", empty candidates
+// - ?mode=ambiguous        → slot 0 has TWO item candidates (same slot_index, different id), confidence=0.5
+//                            other slots have zero candidates, global status "ambiguous"
+// - ?mode=class_candidates → returns exactly ONE class candidate (and NO item candidates)
+//                            { kind:"class", id:"unknown_class", label:"Unknown Class", confidence:0.5, source:"skeleton" }
+//                            status "matches" iff exactly one class candidate
 //
 // IMPORTANT: When ?mode is provided, we do NOT call Supabase or do any matching work.
 
@@ -86,7 +89,7 @@ type ClassificationEvidenceSignal = {
   source: string;
   type: string;
   value: string;
-  weight: number;
+  weight: number; // 0..1
   meta: Record<string, any>;
 };
 
@@ -117,28 +120,72 @@ const MIN_AUTODETECT_MARGIN = 3; // bestScore must beat 2nd by this margin to av
 const GROUP_MERGE_MAX_ADJ_DIST = 20; // <=20 treated as same physical item region (allows medium/large merge)
 
 // Dominant false-positive suppression:
-// If the same item becomes the "best" match for many groups in one request, it is often a hash-collision or UI-pattern FP.
-// We suppress auto-detect for that dominant item unless its margin is meaningfully stronger.
 const DOMINANT_BEST_COUNT = 2;
 const DOMINANT_MARGIN_BONUS = 2; // requires margin >= MIN_AUTODETECT_MARGIN + bonus
 
-function buildEmptyContract(status: ClassificationContractV1["status"], modeValue: string): ClassificationContractV1 {
+function signalSortKey(s: ClassificationEvidenceSignal): string {
+  const slot = s?.meta?.slot_index;
+  const slotKey = typeof slot === "number" ? String(slot).padStart(4, "0") : "zzzz";
+  const valueKey = s.value ?? "";
+  return `${s.source}|${s.type}|${slotKey}|${valueKey}`;
+}
+
+function sortSignalsStable(signals: ClassificationEvidenceSignal[]): ClassificationEvidenceSignal[] {
+  // Deterministic ordering rule:
+  // stable sort by source,type,meta.slot_index (if present), value
+  return [...signals].sort((a, b) => {
+    const ka = signalSortKey(a);
+    const kb = signalSortKey(b);
+    if (ka < kb) return -1;
+    if (ka > kb) return 1;
+    return 0;
+  });
+}
+
+function buildContract(
+  status: ClassificationContractV1["status"],
+  items: ClassificationCandidate[],
+  classes: ClassificationCandidate[],
+  signals: ClassificationEvidenceSignal[]
+): ClassificationContractV1 {
   return {
     version: 1,
     status,
-    candidates: { items: [], class: [] },
+    candidates: { items, class: classes },
     evidence: {
-      signals: [
-        {
-          source: "skeleton",
-          type: "mode",
-          value: modeValue,
-          weight: 1,
-          meta: {},
-        },
-      ],
+      signals: sortSignalsStable(signals),
       notes: [],
     },
+  };
+}
+
+function modeSignal(modeValue: string): ClassificationEvidenceSignal {
+  return {
+    source: "skeleton",
+    type: "mode",
+    value: modeValue,
+    weight: 1,
+    meta: {},
+  };
+}
+
+function gateSignal(value: string, meta: Record<string, any> = {}): ClassificationEvidenceSignal {
+  return {
+    source: "skeleton",
+    type: "gate",
+    value,
+    weight: 1,
+    meta,
+  };
+}
+
+function candidateSignal(value: string, meta: Record<string, any> = {}): ClassificationEvidenceSignal {
+  return {
+    source: "skeleton",
+    type: "candidate",
+    value,
+    weight: 1,
+    meta,
   };
 }
 
@@ -198,9 +245,6 @@ function clampBox(box: CropBox, w: number, h: number): CropBox {
 }
 
 async function estimateItemRowCenterY(bytes: Buffer, w: number, h: number): Promise<number> {
-  // Find the strongest horizontal "edge energy" band in the expected item-row x-range.
-  // This makes crop placement robust even for very tall scroll captures.
-
   const smallW = 256;
   const smallH = Math.min(2000, Math.max(256, Math.round((h * smallW) / w)));
 
@@ -214,14 +258,12 @@ async function estimateItemRowCenterY(bytes: Buffer, w: number, h: number): Prom
   const sh = Math.round(buf.length / sw);
   if (sh <= 2) return Math.round(h * 0.28);
 
-  // item-row band is roughly the right-side 10-slot region
   const x0 = Math.max(0, Math.min(sw - 2, Math.round(sw * 0.29)));
   const x1 = Math.max(x0 + 1, Math.min(sw - 1, Math.round(sw * 0.97)));
 
   let bestY = 0;
   let bestScore = -1;
 
-  // skip extreme top/bottom where UI chrome often dominates
   const yStart = Math.max(1, Math.round(sh * 0.05));
   const yEnd = Math.min(sh - 2, Math.round(sh * 0.95));
 
@@ -234,7 +276,6 @@ async function estimateItemRowCenterY(bytes: Buffer, w: number, h: number): Prom
       s += Math.abs(b - a);
     }
 
-    // mild preference toward upper region (real screenshots) without breaking scroll captures
     const yBias = 1 + (1 - y / sh) * 0.15;
     const score = s * yBias;
 
@@ -249,9 +290,6 @@ async function estimateItemRowCenterY(bytes: Buffer, w: number, h: number): Prom
 }
 
 async function buildItemIconBoxes(bytes: Buffer, w: number, h: number): Promise<CropBox[]> {
-  // Crop geometry must remain stable even on very tall scroll captures.
-  // We detect the likely item-row band instead of using h-proportional offsets.
-
   const ICON_BAND_HEIGHT = 160;
 
   const centerY = await estimateItemRowCenterY(bytes, w, h);
@@ -410,8 +448,6 @@ function scoreTripleHash(
   const dd = hammingDistanceHex64(dHashA, dHashB);
   const dp = hammingDistanceHex64(pHashA, pHashB);
 
-  // Keep score on 0..64 scale: 64 - weighted average distance.
-  // pHash tends to be more discriminative than aHash/dHash on low-info crops, so weight it higher.
   const weighted = da + dd + dp * 2;
   const denom = 4;
   return 64 - Math.round(weighted / denom);
@@ -533,7 +569,10 @@ export async function POST(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const modeRaw = (searchParams.get("mode") ?? "").toLowerCase();
-    const mode = modeRaw === "disabled" || modeRaw === "ambiguous" || modeRaw === "no_matches" ? modeRaw : null;
+    const mode =
+      modeRaw === "disabled" || modeRaw === "ambiguous" || modeRaw === "no_matches" || modeRaw === "class_candidates"
+        ? modeRaw
+        : null;
 
     const form = await req.formData();
     const file = form.get("image");
@@ -586,30 +625,46 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Skeleton override: ?mode=disabled | ?mode=no_matches | ?mode=ambiguous
+    // Skeleton override: deterministic evidence.signals semantics + ordering
     if (mode) {
-      let classification: ClassificationContractV1;
-
       if (mode === "disabled") {
-        classification = buildEmptyContract("disabled", "disabled");
-      } else if (mode === "no_matches") {
-        classification = buildEmptyContract("no_matches", "no_matches");
-      } else {
-        // ambiguous: slot 0 gets two candidates (same slot_index, different id), confidence=0.5
-        const items: ClassificationCandidate[] = [
+        const classification = buildContract("disabled", [], [], [modeSignal("disabled")]);
+
+        return NextResponse.json({
+          imageSize: { w, h },
+          slots,
+          adjacentDistances,
+          groups,
+          groupMergeMaxAdjDist: GROUP_MERGE_MAX_ADJ_DIST,
+          matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null,
+          matchingEnabled: false,
+          classification,
+          ...(debugCropsEnabled ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } } : {}),
+        });
+      }
+
+      if (mode === "no_matches") {
+        const classification = buildContract("no_matches", [], [], [modeSignal("no_matches"), gateSignal("no_candidates")]);
+
+        return NextResponse.json({
+          imageSize: { w, h },
+          slots,
+          adjacentDistances,
+          groups,
+          groupMergeMaxAdjDist: GROUP_MERGE_MAX_ADJ_DIST,
+          matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null,
+          matchingEnabled: false,
+          classification,
+          ...(debugCropsEnabled ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } } : {}),
+        });
+      }
+
+      if (mode === "class_candidates") {
+        const classCandidates: ClassificationCandidate[] = [
           {
-            kind: "item",
-            id: "unknown_item_a",
-            label: "Unknown Item",
-            confidence: 0.5,
-            source: "skeleton",
-            slot_index: 0,
-            meta: {},
-          },
-          {
-            kind: "item",
-            id: "unknown_item_b",
-            label: "Unknown Item",
+            kind: "class",
+            id: "unknown_class",
+            label: "Unknown Class",
             confidence: 0.5,
             source: "skeleton",
             slot_index: 0,
@@ -617,24 +672,52 @@ export async function POST(req: NextRequest) {
           },
         ];
 
-        classification = {
-          version: 1,
-          status: "ambiguous",
-          candidates: { items, class: [] },
-          evidence: {
-            signals: [
-              {
-                source: "skeleton",
-                type: "mode",
-                value: "ambiguous",
-                weight: 1,
-                meta: {},
-              },
-            ],
-            notes: [],
-          },
-        };
+        const status: ClassificationContractV1["status"] = classCandidates.length === 1 ? "matches" : "ambiguous";
+
+        const classification = buildContract(status, [], classCandidates, [
+          modeSignal("class_candidates"),
+          candidateSignal("class_candidate", { slot_index: 0, id: "unknown_class", label: "Unknown Class" }),
+        ]);
+
+        return NextResponse.json({
+          imageSize: { w, h },
+          slots,
+          adjacentDistances,
+          groups,
+          groupMergeMaxAdjDist: GROUP_MERGE_MAX_ADJ_DIST,
+          matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null,
+          matchingEnabled: false,
+          classification,
+          ...(debugCropsEnabled ? { debugCrops: { slotPngs: debugSlotCrops, groupPngs: debugGroupCrops } } : {}),
+        });
       }
+
+      // ambiguous
+      const items: ClassificationCandidate[] = [
+        {
+          kind: "item",
+          id: "unknown_item_a",
+          label: "Unknown Item",
+          confidence: 0.5,
+          source: "skeleton",
+          slot_index: 0,
+          meta: {},
+        },
+        {
+          kind: "item",
+          id: "unknown_item_b",
+          label: "Unknown Item",
+          confidence: 0.5,
+          source: "skeleton",
+          slot_index: 0,
+          meta: {},
+        },
+      ];
+
+      const classification = buildContract("ambiguous", items, [], [
+        modeSignal("ambiguous"),
+        gateSignal("ambiguous_slot", { slot_index: 0 }),
+      ]);
 
       return NextResponse.json({
         imageSize: { w, h },
@@ -652,14 +735,16 @@ export async function POST(req: NextRequest) {
     const matchingEnabled = process.env.ITEM_CLASSIFY_MATCHING === "1";
 
     if (!matchingEnabled) {
-      const classification = buildEmptyContract("disabled", "env_disabled");
-      classification.evidence.signals.push({
-        source: "hash_match",
-        type: "env",
-        value: "ITEM_CLASSIFY_MATCHING!=1",
-        weight: 1,
-        meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
-      });
+      // keep deterministic ordering for signals even in env-disabled
+      const classification = buildContract("disabled", [], [], [
+        {
+          source: "hash_match",
+          type: "env",
+          value: "ITEM_CLASSIFY_MATCHING!=1",
+          weight: 1,
+          meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
+        },
+      ]);
 
       return NextResponse.json({
         imageSize: { w, h },
@@ -782,7 +867,6 @@ export async function POST(req: NextRequest) {
       const margin = g.bestMargin ?? 0;
       if (margin >= requiredDominantMargin) continue;
 
-      // Remove the dominant best item entirely from this group's candidates.
       g.candidates = g.candidates.filter((c) => c.itemId !== best.itemId);
 
       const newBest = g.candidates[0];
@@ -798,30 +882,19 @@ export async function POST(req: NextRequest) {
       g.autoDetected = !!newBest && newBest.score >= MIN_SCORE_AUTODETECT && newMarginOk;
     }
 
-    // Contract output (derived from current candidate lists; no confidence heuristics)
     const contractItems = candidatesFromGroups(groups);
     const derivedStatus = deriveStatusFromCandidates(contractItems, false);
 
-    const classification: ClassificationContractV1 = {
-      version: 1,
-      status: derivedStatus,
-      candidates: {
-        items: contractItems,
-        class: [],
+    // Deterministic evidence ordering for non-skeleton path as well
+    const classification = buildContract(derivedStatus, contractItems, [], [
+      {
+        source: "hash_match",
+        type: "env",
+        value: "ITEM_CLASSIFY_MATCHING=1",
+        weight: 1,
+        meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
       },
-      evidence: {
-        signals: [
-          {
-            source: "hash_match",
-            type: "env",
-            value: "ITEM_CLASSIFY_MATCHING=1",
-            weight: 1,
-            meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
-          },
-        ],
-        notes: [],
-      },
-    };
+    ]);
 
     return NextResponse.json({
       imageSize: { w, h },
