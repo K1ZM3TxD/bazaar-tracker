@@ -26,14 +26,19 @@ function parseMode(modeRaw: string | null): "disabled" | "no_matches" | "ambiguo
   return m === "disabled" || m === "no_matches" || m === "ambiguous" || m === "class_candidates" ? m : null;
 }
 
-async function runClassificationMode(bytes: Buffer, ext: string, contentType: string, mode: string) {
-  // Call the local route handler directly with a Request that includes ?mode=
+function parseClassify(classifyRaw: string | null): boolean {
+  return (classifyRaw ?? "").trim() === "1";
+}
+
+async function runClassification(bytes: Buffer, ext: string, contentType: string, mode?: string | null) {
+  // Call the local route handler directly with a Request (optionally with ?mode=)
   const url = new URL("http://local/api/vision/items/classify");
-  url.searchParams.set("mode", mode);
+  if (mode) url.searchParams.set("mode", mode);
 
   const fd = new FormData();
   // classify route expects field "image"
-  fd.set("image", new File([bytes], `upload.${ext}`, { type: contentType }));
+  // IMPORTANT: keep byte-handling fix (do not regress)
+  fd.set("image", new File([new Uint8Array(bytes)], `upload.${ext}`, { type: contentType }));
 
   const req = new Request(url.toString(), { method: "POST", body: fd }) as any;
   const res: any = await classifyItemsPost(req);
@@ -62,6 +67,7 @@ export async function POST(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const mode = parseMode(searchParams.get("mode"));
+    const classify = parseClassify(searchParams.get("classify"));
 
     const form = await req.formData();
     const file = form.get("file") as File | null;
@@ -76,7 +82,10 @@ export async function POST(req: Request) {
       return jsonError("Invalid screenshot sha256", 500);
     }
 
-    // Deduplicate early (but make classification behavior explicit/observable when mode is provided)
+    const ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
+    const contentType = file.type || "image/png";
+
+    // Deduplicate early
     const { data: existing, error: existingErr } = await supabase
       .from("victory_submissions")
       .select("id, wins, screenshot_sha256, classification_result")
@@ -91,14 +100,14 @@ export async function POST(req: Request) {
     }
 
     if (existing?.id) {
-      // Deterministic dedupe semantics:
-      // - If mode provided: recompute + persist classification_result (observable)
-      // - Else: do not recompute (explicit)
+      // Deduped behavior:
+      // - If mode provided: recompute + persist classification_result (observable; existing behavior)
+      // - Else if classify=1:
+      //     - If existing classification_result is non-null: leave as-is
+      //     - If null: compute real classification (no mode) and persist
+      // - Else: do not recompute
       if (mode) {
-        const ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
-        const contentType = file.type || "image/png";
-
-        const classified = await runClassificationMode(bytes, ext, contentType, mode);
+        const classified = await runClassification(bytes, ext, contentType, mode);
         if (!classified.ok) {
           return jsonError("Item classify (mode) returned error", 500, {
             where: "vision.items.classify",
@@ -128,6 +137,53 @@ export async function POST(req: Request) {
           wins: existing.wins,
           screenshot_sha256: existing.screenshot_sha256,
           classificationRecomputed: true,
+          classification: classification_result,
+        });
+      }
+
+      if (classify) {
+        if (existing.classification_result !== null && existing.classification_result !== undefined) {
+          return NextResponse.json({
+            ok: true,
+            deduped: true,
+            submissionId: existing.id,
+            wins: existing.wins,
+            screenshot_sha256: existing.screenshot_sha256,
+            classificationRecomputed: false,
+            classification: existing.classification_result,
+          });
+        }
+
+        const classified = await runClassification(bytes, ext, contentType, null);
+        if (!classified.ok) {
+          return jsonError("Item classify returned error", 500, {
+            where: "vision.items.classify",
+            body: classified.body ?? null,
+          });
+        }
+
+        const classification_result = classified.classification ?? null;
+
+        const { error: updErr } = await supabase
+          .from("victory_submissions")
+          .update({ classification_result })
+          .eq("id", existing.id);
+
+        if (updErr) {
+          return jsonError("Failed to update classification_result on deduped submission", 500, {
+            where: "victory_submissions.update",
+            message: updErr.message,
+          });
+        }
+
+        return NextResponse.json({
+          ok: true,
+          deduped: true,
+          submissionId: existing.id,
+          wins: existing.wins,
+          screenshot_sha256: existing.screenshot_sha256,
+          classificationRecomputed: true,
+          classification: classification_result,
         });
       }
 
@@ -142,8 +198,6 @@ export async function POST(req: Request) {
     }
 
     // Upload screenshot
-    const ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
-    const contentType = file.type || "image/png";
     const storage_path = `ingest/${screenshot_sha256}.${ext}`;
 
     const { error: uploadErr } = await supabase.storage.from("victory_screenshots").upload(storage_path, bytes, {
@@ -187,16 +241,29 @@ export async function POST(req: Request) {
       itemCrops = null;
     }
 
-    // Classification persistence (only when mode is explicitly requested)
+    // Classification persistence:
+    // - mode (skeleton) remains explicit debug override
+    // - classify=1 triggers REAL classification (no mode), persisted into victory_submissions.classification_result
+    // - default unchanged: no classification work, no new DB writes
     let classification_result: any = null;
     let classificationRecomputed = false;
 
     if (mode) {
-      const classified = await runClassificationMode(bytes, ext, contentType, mode);
+      const classified = await runClassification(bytes, ext, contentType, mode);
       if (!classified.ok) {
         return jsonError("Item classify (mode) returned error", 500, {
           where: "vision.items.classify",
           mode,
+          body: classified.body ?? null,
+        });
+      }
+      classification_result = classified.classification ?? null;
+      classificationRecomputed = true;
+    } else if (classify) {
+      const classified = await runClassification(bytes, ext, contentType, null);
+      if (!classified.ok) {
+        return jsonError("Item classify returned error", 500, {
+          where: "vision.items.classify",
           body: classified.body ?? null,
         });
       }
@@ -280,6 +347,7 @@ export async function POST(req: Request) {
       storage_path,
       screenshot_sha256,
       classificationRecomputed,
+      ...(classificationRecomputed ? { classification: classification_result ?? null } : {}),
       // Observability only (not persisted here)
       itemCrops: itemCrops ?? null,
     });
