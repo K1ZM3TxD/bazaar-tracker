@@ -12,10 +12,30 @@ type AnalyzeResponse = {
   error?: string
 }
 
+type EvidenceSignal = {
+  source: string
+  type: string
+  value: string
+  weight: number
+  meta: Record<string, any>
+}
+
+type ClassificationSummary = {
+  version: number | null
+  status: string | null
+  hasCandidates: boolean
+  itemCandidateCount: number
+  classCandidateCount: number
+  evidence?: {
+    signals: EvidenceSignal[]
+  }
+}
+
 type StatusResponse = {
   submissionId?: string
   wins?: number | null
   storage_path?: string
+  classification?: ClassificationSummary | null
   error?: string
 }
 
@@ -30,6 +50,13 @@ export default function UploadPage() {
   const [submissionId, setSubmissionId] = useState<string | null>(null)
   const [wins, setWins] = useState<number | null>(null)
   const [dedupe, setDedupe] = useState<boolean | null>(null)
+
+  // Classification panel state (from /api/ingest/status persisted data)
+  const [classification, setClassification] = useState<ClassificationSummary | null>(null)
+  const [showEvidence, setShowEvidence] = useState<boolean>(false)
+  const [evidenceSignals, setEvidenceSignals] = useState<EvidenceSignal[] | null>(null)
+  const [evidenceLoading, setEvidenceLoading] = useState<boolean>(false)
+  const [evidenceError, setEvidenceError] = useState<string | null>(null)
 
   const pollingRef = useRef<{
     intervalId?: ReturnType<typeof setInterval>
@@ -70,6 +97,18 @@ export default function UploadPage() {
     }
   })()
 
+  async function fetchStatusBySubmissionId(id: string, includeEvidence: boolean) {
+    const url = includeEvidence
+      ? `/api/ingest/status?submissionId=${encodeURIComponent(id)}&include=evidence`
+      : `/api/ingest/status?submissionId=${encodeURIComponent(id)}`
+    const res = await fetch(url, { cache: 'no-store' })
+    const data = (await res.json()) as StatusResponse
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Status check failed')
+    }
+    return data
+  }
+
   async function handleUpload() {
     if (!selectedFile) {
       setErrorMessage('Please select an image to upload.')
@@ -83,6 +122,11 @@ export default function UploadPage() {
     setSubmissionId(null)
     setWins(null)
     setDedupe(null)
+    setClassification(null)
+    setShowEvidence(false)
+    setEvidenceSignals(null)
+    setEvidenceLoading(false)
+    setEvidenceError(null)
     stopPolling()
 
     try {
@@ -115,6 +159,18 @@ export default function UploadPage() {
         setDedupe(data.dedupe)
       } else if (typeof data.deduped === 'boolean') {
         setDedupe(data.deduped)
+      }
+
+      // If we already have a submissionId, fetch status once to populate classification panel (persisted data).
+      if (data.submissionId) {
+        try {
+          const st = await fetchStatusBySubmissionId(data.submissionId, false)
+          if (st.classification !== undefined) {
+            setClassification(st.classification ?? null)
+          }
+        } catch {
+          // keep silent; polling can still succeed
+        }
       }
 
       if (typeof data.wins === 'number') {
@@ -151,6 +207,10 @@ export default function UploadPage() {
           setSubmissionId(data.submissionId)
         }
 
+        if (data.classification !== undefined) {
+          setClassification(data.classification ?? null)
+        }
+
         if (typeof data.wins === 'number') {
           setWins(data.wins)
           setStatus('done')
@@ -173,6 +233,41 @@ export default function UploadPage() {
     }, 30_000)
 
     poll()
+  }
+
+  async function toggleEvidence(next: boolean) {
+    setShowEvidence(next)
+    setEvidenceError(null)
+
+    if (!next) {
+      setEvidenceSignals(null)
+      setEvidenceLoading(false)
+      return
+    }
+
+    if (!submissionId) {
+      setEvidenceSignals(null)
+      setEvidenceLoading(false)
+      setEvidenceError('No submissionId yet (upload still processing).')
+      return
+    }
+
+    setEvidenceLoading(true)
+    setEvidenceSignals(null)
+
+    try {
+      const st = await fetchStatusBySubmissionId(submissionId, true)
+      const signals = st.classification?.evidence?.signals ?? []
+      setEvidenceSignals(signals)
+      // Keep the summary fields aligned with latest persisted status too.
+      if (st.classification !== undefined) {
+        setClassification(st.classification ?? null)
+      }
+    } catch (e: any) {
+      setEvidenceError(e?.message || 'Failed to load evidence')
+    } finally {
+      setEvidenceLoading(false)
+    }
   }
 
   return (
@@ -214,12 +309,85 @@ export default function UploadPage() {
         {sha256 && (
           <div className="text-sm text-gray-200 space-y-2">
             <div>
-              SHA-256:{' '}
-              <span className="text-emerald-300 break-all font-mono">{sha256}</span>
+              SHA-256: <span className="text-emerald-300 break-all font-mono">{sha256}</span>
             </div>
             {submissionId && <div>Submission ID: {submissionId}</div>}
             {dedupe !== null && <div>Dedupe: {dedupe ? 'true' : 'false'}</div>}
             <div>Wins: {wins ?? '—'}</div>
+          </div>
+        )}
+
+        {/* Classification panel (submission details) */}
+        {submissionId && (
+          <div className="border border-gray-700 rounded-lg p-4 bg-black/40 space-y-3">
+            <div className="text-sm font-semibold text-gray-200">Classification</div>
+
+            {!classification && <div className="text-sm text-gray-400">No classification data.</div>}
+
+            {classification && (
+              <div className="text-sm text-gray-200 space-y-1">
+                <div>
+                  status: <span className="font-mono">{String(classification.status ?? 'null')}</span>
+                </div>
+                <div>hasCandidates: {classification.hasCandidates ? 'true' : 'false'}</div>
+                <div>itemCandidateCount: {classification.itemCandidateCount}</div>
+                <div>classCandidateCount: {classification.classCandidateCount}</div>
+              </div>
+            )}
+
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input
+                type="checkbox"
+                checked={showEvidence}
+                disabled={!submissionId}
+                onChange={(e) => {
+                  void toggleEvidence(e.target.checked)
+                }}
+              />
+              Show evidence
+            </label>
+
+            {showEvidence && (
+              <div className="space-y-2">
+                {evidenceLoading && <div className="text-sm text-gray-400">Loading evidence…</div>}
+                {evidenceError && <div className="text-sm text-red-400">{evidenceError}</div>}
+
+                {!evidenceLoading && !evidenceError && evidenceSignals && evidenceSignals.length === 0 && (
+                  <div className="text-sm text-gray-400">No evidence signals.</div>
+                )}
+
+                {!evidenceLoading && !evidenceError && evidenceSignals && evidenceSignals.length > 0 && (
+                  <ul className="space-y-2">
+                    {evidenceSignals.map((s, idx) => (
+                      <li key={idx} className="border border-gray-700 rounded p-2 bg-black/30">
+                        <div className="text-sm">
+                          <span className="text-gray-400">source:</span>{' '}
+                          <span className="font-mono">{s.source}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="text-gray-400">type:</span>{' '}
+                          <span className="font-mono">{s.type}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="text-gray-400">value:</span>{' '}
+                          <span className="font-mono">{s.value}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="text-gray-400">weight:</span>{' '}
+                          <span className="font-mono">{String(s.weight)}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="text-gray-400">meta:</span>
+                        </div>
+                        <pre className="text-xs text-gray-200 bg-black/50 border border-gray-700 rounded p-2 overflow-auto">
+                          {JSON.stringify(s.meta ?? {}, null, 2)}
+                        </pre>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
