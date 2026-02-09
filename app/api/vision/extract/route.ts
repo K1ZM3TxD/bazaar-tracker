@@ -11,6 +11,8 @@ export const runtime = "nodejs"; // required (Google SDK uses Node APIs)
 const KNOWN_BANNER_HASH_TO_WINS: Record<string, number> = {
   // Populate by uploading one screenshot per wins value and copying the computed bannerHash here.
   "f0f8f8f8f8f0f0f0": 10,
+  // Banner variant observed in failing screenshot (nearest known was f0f8f8f8f8f0f0f0 at dist=7)
+  "e0f070f8f8f8e0d0": 10,
   "f0f0f0e0e0c0d0d0": 6,
   "f0f0b8f8f8f0f0f0": 10,
 };

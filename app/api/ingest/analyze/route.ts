@@ -30,14 +30,50 @@ function parseClassify(classifyRaw: string | null): boolean {
   return (classifyRaw ?? "").trim() === "1";
 }
 
+function inferExtAndContentTypeFromPath(storage_path: string): { ext: string; contentType: string } {
+  const lower = storage_path.toLowerCase();
+  const ext = lower.split(".").pop() || "png";
+  const contentType =
+    ext === "jpg" || ext === "jpeg"
+      ? "image/jpeg"
+      : ext === "webp"
+        ? "image/webp"
+        : ext === "gif"
+          ? "image/gif"
+          : "image/png";
+  return { ext, contentType };
+}
+
+async function readJsonOrUrlEncoded(req: Request): Promise<{ screenshot_sha256?: string; storage_path?: string }> {
+  const ct = (req.headers.get("content-type") || "").toLowerCase();
+
+  if (ct.includes("application/json")) {
+    const body: any = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") return {};
+    return {
+      screenshot_sha256: typeof body.screenshot_sha256 === "string" ? body.screenshot_sha256 : undefined,
+      storage_path: typeof body.storage_path === "string" ? body.storage_path : undefined,
+    };
+  }
+
+  if (ct.includes("application/x-www-form-urlencoded")) {
+    const text = await req.text();
+    const params = new URLSearchParams(text);
+    return {
+      screenshot_sha256: params.get("screenshot_sha256") ?? undefined,
+      storage_path: params.get("storage_path") ?? undefined,
+    };
+  }
+
+  return {};
+}
+
 async function runClassification(bytes: Buffer, ext: string, contentType: string, mode?: string | null) {
   // Call the local route handler directly with a Request (optionally with ?mode=)
   const url = new URL("http://local/api/vision/items/classify");
   if (mode) url.searchParams.set("mode", mode);
 
   const fd = new FormData();
-  // classify route expects field "image"
-  // IMPORTANT: keep byte-handling fix (do not regress)
   fd.set("image", new File([new Uint8Array(bytes)], `upload.${ext}`, { type: contentType }));
 
   const req = new Request(url.toString(), { method: "POST", body: fd }) as any;
@@ -69,23 +105,81 @@ export async function POST(req: Request) {
     const mode = parseMode(searchParams.get("mode"));
     const classify = parseClassify(searchParams.get("classify"));
 
-    const form = await req.formData();
-    const file = form.get("file") as File | null;
-    if (!file) {
-      return jsonError("Missing file", 400);
+    // Input handling:
+    // - Primary path: multipart with "file"
+    // - Classify-only path: JSON or x-www-form-urlencoded with { screenshot_sha256, storage_path } and classify=1
+    let file: File | null = null;
+    let bytes: Buffer | null = null;
+    let ext = "png";
+    let contentType = "image/png";
+    let screenshot_sha256: string | null = null;
+    let storage_path: string | null = null;
+
+    const reqContentType = (req.headers.get("content-type") || "").toLowerCase();
+
+    if (reqContentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      file = form.get("file") as File | null;
+      if (!file) {
+        return jsonError("Missing file", 400);
+      }
+
+      bytes = Buffer.from(await file.arrayBuffer());
+      screenshot_sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
+      ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
+      contentType = file.type || "image/png";
+      storage_path = `ingest/${screenshot_sha256}.${ext}`;
+    } else {
+      // Non-multipart. Only allowed for classification with pre-upload inputs.
+      if (!classify) {
+        // Preserve existing behavior when classify is absent: multipart/file is required.
+        return jsonError("Missing file", 400);
+      }
+
+      const parsed = await readJsonOrUrlEncoded(req);
+      screenshot_sha256 = (parsed.screenshot_sha256 ?? "").trim() || null;
+      storage_path = (parsed.storage_path ?? "").trim() || null;
+
+      if (!screenshot_sha256 || !storage_path) {
+        return jsonError("Missing screenshot_sha256 or storage_path", 400);
+      }
+      if (!isHex64(screenshot_sha256)) {
+        return jsonError("Invalid screenshot_sha256", 400);
+      }
+
+      const inferred = inferExtAndContentTypeFromPath(storage_path);
+      ext = inferred.ext;
+      contentType = inferred.contentType;
+
+      // Download bytes from storage (upload already happened elsewhere)
+      const { data: dl, error: dlErr } = await supabase.storage.from("victory_screenshots").download(storage_path);
+      if (dlErr || !dl) {
+        return jsonError("Failed to download screenshot from storage", 500, {
+          where: "victory_screenshots.download",
+          message: dlErr?.message ?? null,
+          storage_path,
+        });
+      }
+      const ab = await dl.arrayBuffer();
+      bytes = Buffer.from(ab);
+
+      // Safety check: sha must match the downloaded bytes
+      const downloadedSha = crypto.createHash("sha256").update(bytes).digest("hex");
+      if (downloadedSha !== screenshot_sha256) {
+        return jsonError("Downloaded bytes sha256 mismatch", 422, {
+          where: "victory_screenshots.download.sha_mismatch",
+          expected: screenshot_sha256,
+          got: downloadedSha,
+          storage_path,
+        });
+      }
     }
 
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const screenshot_sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
-
-    if (!isHex64(screenshot_sha256)) {
-      return jsonError("Invalid screenshot sha256", 500);
+    if (!bytes || !screenshot_sha256 || !storage_path) {
+      return jsonError("Invalid request", 400);
     }
 
-    const ext = (file.type && file.type.includes("/") ? file.type.split("/")[1] : "") || "png";
-    const contentType = file.type || "image/png";
-
-    // Deduplicate early
+    // Deduplicate early (canonical row is victory_submissions by screenshot_sha256)
     const { data: existing, error: existingErr } = await supabase
       .from("victory_submissions")
       .select("id, wins, screenshot_sha256, classification_result")
@@ -100,10 +194,10 @@ export async function POST(req: Request) {
     }
 
     if (existing?.id) {
-      // Deduped behavior:
-      // - If mode provided: recompute + persist classification_result (observable; existing behavior)
-      // - Else if classify=1:
-      //     - If existing classification_result is non-null: leave as-is
+      // Dedupe behavior:
+      // - mode (debug): recompute + persist (observable; existing behavior)
+      // - classify=1:
+      //     - If existing classification_result is non-null: do not overwrite
       //     - If null: compute real classification (no mode) and persist
       // - Else: do not recompute
       if (mode) {
@@ -143,6 +237,7 @@ export async function POST(req: Request) {
 
       if (classify) {
         if (existing.classification_result !== null && existing.classification_result !== undefined) {
+          // Hard constraint: do not overwrite persisted classification_result
           return NextResponse.json({
             ok: true,
             deduped: true,
@@ -197,9 +292,16 @@ export async function POST(req: Request) {
       });
     }
 
-    // Upload screenshot
-    const storage_path = `ingest/${screenshot_sha256}.${ext}`;
+    // If we reach here, there is no canonical victory_submissions row yet.
+    // Preserve existing behavior: analyze creates the row only for multipart/file uploads.
+    if (!file) {
+      return jsonError("No existing submission for screenshot_sha256", 404, {
+        screenshot_sha256,
+        storage_path,
+      });
+    }
 
+    // Upload screenshot (for multipart path)
     const { error: uploadErr } = await supabase.storage.from("victory_screenshots").upload(storage_path, bytes, {
       contentType,
       upsert: true,
@@ -233,7 +335,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Item slot crops (best effort) — local module call (no external service)
+    // Item slot crops (best effort) — observability only
     let itemCrops: ItemsExtractResponse | null = null;
     try {
       itemCrops = await extractItemCropsFromBytes(bytes);
@@ -348,7 +450,6 @@ export async function POST(req: Request) {
       screenshot_sha256,
       classificationRecomputed,
       ...(classificationRecomputed ? { classification: classification_result ?? null } : {}),
-      // Observability only (not persisted here)
       itemCrops: itemCrops ?? null,
     });
   } catch (e: any) {

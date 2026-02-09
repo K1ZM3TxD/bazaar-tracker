@@ -45,7 +45,7 @@ type CropBox = { left: number; top: number; width: number; height: number };
 type Candidate = {
   itemId: number;
   name: string;
-  score: number; // higher is better
+  score: number; // higher is better (raw triple-hash score 0..64)
 };
 
 type SlotFeature = {
@@ -122,6 +122,11 @@ const GROUP_MERGE_MAX_ADJ_DIST = 20; // <=20 treated as same physical item regio
 // Dominant false-positive suppression:
 const DOMINANT_BEST_COUNT = 2;
 const DOMINANT_MARGIN_BONUS = 2; // requires margin >= MIN_AUTODETECT_MARGIN + bonus
+
+function stableCandidateIdKey(itemId: number): string {
+  // Deterministic tiebreak key (lexicographically sortable, stable across runs)
+  return String(itemId).padStart(12, "0");
+}
 
 function signalSortKey(s: ClassificationEvidenceSignal): string {
   const slot = s?.meta?.slot_index;
@@ -206,25 +211,109 @@ function deriveStatusFromCandidates(
   return "matches";
 }
 
-function candidatesFromGroups(groups: SlotGroup[]): ClassificationCandidate[] {
-  const out: ClassificationCandidate[] = [];
+function buildHashMatchCandidateSignals(groups: SlotGroup[]): ClassificationEvidenceSignal[] {
+  const out: ClassificationEvidenceSignal[] = [];
   for (const g of groups) {
     for (const c of g.candidates ?? []) {
       out.push({
-        kind: "item",
-        id: String(c.itemId),
-        label: c.name,
-        // Contract-only: no confidence heuristics. Preserve score in meta.
-        confidence: 0.0,
         source: "hash_match",
-        slot_index: g.startSlot,
+        type: "candidate", // existing signal type
+        value: "item_candidate",
+        weight: 1,
         meta: {
-          score: c.score,
+          slot_index: g.startSlot,
+          item_id: c.itemId,
+          label: c.name,
+          hash_score: c.score, // raw triple-hash score (0..64)
           group_span: g.span,
         },
       });
     }
   }
+  return out;
+}
+
+function computeDeterministicCandidateScoreFromSignals(
+  signals: ClassificationEvidenceSignal[],
+  slotIndex: number,
+  itemId: number
+): number {
+  // Deterministic integer score computed ONLY from existing evidence.signals.
+  // Same input signals => same numeric score, regardless of upstream ordering.
+  //
+  // Primary: hash_score (0..64) scaled to fixed-point
+  // Secondary: smaller group_span is slightly preferred (more specific crop), deterministic
+  let hashScore = 0;
+  let groupSpan = 4;
+
+  for (const s of signals) {
+    if (!s || s.source !== "hash_match" || s.type !== "candidate" || s.value !== "item_candidate") continue;
+    const meta: any = (s as any).meta ?? {};
+    if (meta.slot_index !== slotIndex) continue;
+    if (meta.item_id !== itemId) continue;
+
+    const hs = typeof meta.hash_score === "number" ? meta.hash_score : 0;
+    const gs = typeof meta.group_span === "number" ? meta.group_span : 4;
+
+    // If duplicates ever exist, take max hash_score + min group_span deterministically.
+    if (hs > hashScore) hashScore = hs;
+    if (gs < groupSpan) groupSpan = gs;
+  }
+
+  // Fixed-point integer score:
+  // hashScore dominates; spanBonus breaks ties deterministically.
+  const spanClamped = Math.max(1, Math.min(4, Math.round(groupSpan)));
+  const spanBonus = 10 - spanClamped; // 9..6
+  return Math.round(hashScore) * 1000 + spanBonus;
+}
+
+function candidatesFromGroupsDeterministic(
+  groups: SlotGroup[],
+  signals: ClassificationEvidenceSignal[]
+): ClassificationCandidate[] {
+  const out: ClassificationCandidate[] = [];
+
+  for (const g of groups) {
+    const groupCandidates = [...(g.candidates ?? [])];
+
+    // Deterministic, order-independent sorting within each slot:
+    // score desc, then item_id asc, then name asc (final tie-break)
+    groupCandidates.sort((a, b) => {
+      const sa = computeDeterministicCandidateScoreFromSignals(signals, g.startSlot, a.itemId);
+      const sb = computeDeterministicCandidateScoreFromSignals(signals, g.startSlot, b.itemId);
+      if (sa !== sb) return sb - sa;
+
+      const ka = stableCandidateIdKey(a.itemId);
+      const kb = stableCandidateIdKey(b.itemId);
+      if (ka < kb) return -1;
+      if (ka > kb) return 1;
+
+      const na = a.name ?? "";
+      const nb = b.name ?? "";
+      if (na < nb) return -1;
+      if (na > nb) return 1;
+      return 0;
+    });
+
+    for (const c of groupCandidates) {
+      const deterministicScore = computeDeterministicCandidateScoreFromSignals(signals, g.startSlot, c.itemId);
+      out.push({
+        kind: "item",
+        id: String(c.itemId),
+        label: c.name,
+        // Contract-only: no confidence heuristics. Persist deterministic score in meta.
+        confidence: 0.0,
+        source: "hash_match",
+        slot_index: g.startSlot,
+        meta: {
+          score: deterministicScore, // persisted numeric score (deterministic, integer)
+          hash_score: c.score, // keep raw triple-hash score for debugging (still within meta container)
+          group_span: g.span,
+        },
+      });
+    }
+  }
+
   return out;
 }
 
@@ -248,11 +337,7 @@ async function estimateItemRowCenterY(bytes: Buffer, w: number, h: number): Prom
   const smallW = 256;
   const smallH = Math.min(2000, Math.max(256, Math.round((h * smallW) / w)));
 
-  const buf = await sharp(bytes)
-    .resize(smallW, smallH, { fit: "inside" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const buf = await sharp(bytes).resize(smallW, smallH, { fit: "inside" }).grayscale().raw().toBuffer();
 
   const sw = smallW;
   const sh = Math.round(buf.length / sw);
@@ -392,34 +477,19 @@ function computePHash64From32x32Gray(pixels: Uint8Array): string {
 }
 
 async function cropToAHash64(bytes: Buffer, box: CropBox): Promise<string> {
-  const buf = await sharp(bytes)
-    .extract(box)
-    .resize(8, 8, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const buf = await sharp(bytes).extract(box).resize(8, 8, { fit: "fill" }).grayscale().raw().toBuffer();
 
   return computeAHash64From8x8Gray(new Uint8Array(buf));
 }
 
 async function cropToDHash64(bytes: Buffer, box: CropBox): Promise<string> {
-  const buf = await sharp(bytes)
-    .extract(box)
-    .resize(9, 8, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const buf = await sharp(bytes).extract(box).resize(9, 8, { fit: "fill" }).grayscale().raw().toBuffer();
 
   return computeDHash64From9x8Gray(new Uint8Array(buf));
 }
 
 async function cropToPHash64(bytes: Buffer, box: CropBox): Promise<string> {
-  const buf = await sharp(bytes)
-    .extract(box)
-    .resize(32, 32, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const buf = await sharp(bytes).extract(box).resize(32, 32, { fit: "fill" }).grayscale().raw().toBuffer();
 
   return computePHash64From32x32Gray(new Uint8Array(buf));
 }
@@ -541,25 +611,13 @@ async function imageUrlToTripleHash(
 ): Promise<{ aHash64: string; dHash64: string; pHash64: string }> {
   const bytes = await fetchImageBytes(url, timeoutMs);
 
-  const aBuf = await sharp(bytes)
-    .resize(8, 8, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const aBuf = await sharp(bytes).resize(8, 8, { fit: "fill" }).grayscale().raw().toBuffer();
   const aHash64 = computeAHash64From8x8Gray(new Uint8Array(aBuf));
 
-  const dBuf = await sharp(bytes)
-    .resize(9, 8, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const dBuf = await sharp(bytes).resize(9, 8, { fit: "fill" }).grayscale().raw().toBuffer();
   const dHash64 = computeDHash64From9x8Gray(new Uint8Array(dBuf));
 
-  const pBuf = await sharp(bytes)
-    .resize(32, 32, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer();
+  const pBuf = await sharp(bytes).resize(32, 32, { fit: "fill" }).grayscale().raw().toBuffer();
   const pHash64 = computePHash64From32x32Gray(new Uint8Array(pBuf));
 
   return { aHash64, dHash64, pHash64 };
@@ -829,7 +887,23 @@ export async function POST(req: NextRequest) {
         const score = scoreTripleHash(g.aHash64, g.dHash64, g.pHash64, it.aHash64, it.dHash64, it.pHash64);
         scored.push({ itemId: it.id, name: it.name, score });
       }
-      scored.sort((a, b) => b.score - a.score);
+
+      // Deterministic sort even before filtering/topN:
+      // score desc, then item_id asc, then name asc.
+      scored.sort((a, b) => {
+        if (a.score !== b.score) return b.score - a.score;
+
+        const ka = stableCandidateIdKey(a.itemId);
+        const kb = stableCandidateIdKey(b.itemId);
+        if (ka < kb) return -1;
+        if (ka > kb) return 1;
+
+        const na = a.name ?? "";
+        const nb = b.name ?? "";
+        if (na < nb) return -1;
+        if (na > nb) return 1;
+        return 0;
+      });
 
       const filtered = scored.filter((c) => c.score >= MIN_SCORE_CANDIDATE);
       g.candidates = filtered.slice(0, TOP_N);
@@ -882,11 +956,8 @@ export async function POST(req: NextRequest) {
       g.autoDetected = !!newBest && newBest.score >= MIN_SCORE_AUTODETECT && newMarginOk;
     }
 
-    const contractItems = candidatesFromGroups(groups);
-    const derivedStatus = deriveStatusFromCandidates(contractItems, false);
-
-    // Deterministic evidence ordering for non-skeleton path as well
-    const classification = buildContract(derivedStatus, contractItems, [], [
+    // Evidence signals (existing types only), used as the sole basis for deterministic candidate scoring.
+    const signals: ClassificationEvidenceSignal[] = [
       {
         source: "hash_match",
         type: "env",
@@ -894,7 +965,14 @@ export async function POST(req: NextRequest) {
         weight: 1,
         meta: { matchingEnv: process.env.ITEM_CLASSIFY_MATCHING ?? null },
       },
-    ]);
+      ...buildHashMatchCandidateSignals(groups),
+    ];
+
+    // Slot-level deterministic per-candidate scoring + stable ordering, persisted into candidate.meta.score
+    const contractItems = candidatesFromGroupsDeterministic(groups, signals);
+    const derivedStatus = deriveStatusFromCandidates(contractItems, false);
+
+    const classification = buildContract(derivedStatus, contractItems, [], signals);
 
     return NextResponse.json({
       imageSize: { w, h },

@@ -12,6 +12,13 @@ type AnalyzeResponse = {
   error?: string
 }
 
+type UploadResponse = {
+  screenshot_sha256?: string
+  storage_path?: string
+  error?: string
+  email?: string
+}
+
 type EvidenceSignal = {
   source: string
   type: string
@@ -130,25 +137,49 @@ export default function UploadPage() {
     stopPolling()
 
     try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
+      // 1) Upload to storage + get screenshot_sha256/storage_path
+      const uploadForm = new FormData()
+      uploadForm.append('file', selectedFile)
 
-      const res = await fetch('/api/ingest/analyze', {
+      const uploadRes = await fetch('/api/ingest/upload', {
         method: 'POST',
-        body: formData,
+        body: uploadForm,
+      })
+
+      const uploadData = (await uploadRes.json()) as UploadResponse
+      if (!uploadRes.ok || uploadData.error) {
+        throw new Error(uploadData.error || 'Upload failed')
+      }
+
+      const resolvedSha = uploadData.screenshot_sha256
+      const storagePath = uploadData.storage_path
+      if (!resolvedSha || !storagePath) {
+        throw new Error('Upload succeeded but did not return screenshot_sha256 + storage_path.')
+      }
+
+      setSha256(resolvedSha)
+
+      // 2) Analyze using the pipeline (sha/storage_path are how it identifies/dedupes)
+      const analyzeForm = new FormData()
+      analyzeForm.append('file', selectedFile)
+
+      const analyzeUrl = `/api/ingest/analyze?sha256=${encodeURIComponent(resolvedSha)}&storage_path=${encodeURIComponent(
+        storagePath
+      )}`
+
+      const res = await fetch(analyzeUrl, {
+        method: 'POST',
+        body: analyzeForm,
       })
 
       const data = (await res.json()) as AnalyzeResponse
       if (!res.ok || data.error) {
-        throw new Error(data.error || 'Upload failed')
+        throw new Error(data.error || 'Analyze failed')
       }
 
-      const resolvedSha = data.sha256 || data.screenshot_sha256
-      if (!resolvedSha) {
-        throw new Error('Upload succeeded but no sha256 returned.')
-      }
+      const finalSha = data.sha256 || data.screenshot_sha256 || resolvedSha
+      setSha256(finalSha)
 
-      setSha256(resolvedSha)
       if (data.submissionId) {
         setSubmissionId(data.submissionId)
       }
@@ -179,7 +210,7 @@ export default function UploadPage() {
       }
 
       setStatus('processing')
-      startPolling(resolvedSha)
+      startPolling(finalSha)
     } catch (err: any) {
       setErrorMessage(err?.message || 'Upload failed')
       setStatus('error')
@@ -259,7 +290,6 @@ export default function UploadPage() {
       const st = await fetchStatusBySubmissionId(submissionId, true)
       const signals = st.classification?.evidence?.signals ?? []
       setEvidenceSignals(signals)
-      // Keep the summary fields aligned with latest persisted status too.
       if (st.classification !== undefined) {
         setClassification(st.classification ?? null)
       }
@@ -274,9 +304,7 @@ export default function UploadPage() {
     <div className="max-w-2xl mx-auto py-10 text-white">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Upload Screenshot</h1>
-        <p className="text-sm text-gray-400 mt-2">
-          Upload a Bazaar victory screenshot and we will analyze it for wins.
-        </p>
+        <p className="text-sm text-gray-400 mt-2">Upload a Bazaar victory screenshot and we will analyze it for wins.</p>
       </div>
 
       <div className="border border-gray-700 rounded-lg p-6 space-y-4 bg-black/30">
@@ -317,7 +345,6 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* Classification panel (submission details) */}
         {submissionId && (
           <div className="border border-gray-700 rounded-lg p-4 bg-black/40 space-y-3">
             <div className="text-sm font-semibold text-gray-200">Classification</div>
@@ -365,12 +392,10 @@ export default function UploadPage() {
                           <span className="font-mono">{s.source}</span>
                         </div>
                         <div className="text-sm">
-                          <span className="text-gray-400">type:</span>{' '}
-                          <span className="font-mono">{s.type}</span>
+                          <span className="text-gray-400">type:</span> <span className="font-mono">{s.type}</span>
                         </div>
                         <div className="text-sm">
-                          <span className="text-gray-400">value:</span>{' '}
-                          <span className="font-mono">{s.value}</span>
+                          <span className="text-gray-400">value:</span> <span className="font-mono">{s.value}</span>
                         </div>
                         <div className="text-sm">
                           <span className="text-gray-400">weight:</span>{' '}
