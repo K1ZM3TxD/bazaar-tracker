@@ -83,10 +83,16 @@ async function runClassification(bytes: Buffer, ext: string, contentType: string
   const body = await res.json().catch(() => null);
 
   if (!res?.ok) {
-    return { ok: false as const, body };
+    return { ok: false as const, body, status: res?.status ?? null };
   }
 
-  return { ok: true as const, classification: body?.classification ?? null, body };
+  // IMPORTANT:
+  // We *must* persist classification_result when classify=1.
+  // If the downstream route ever returns a shape without `classification`,
+  // treat that as a hard error (observable) rather than silently writing null.
+  const classification = body && typeof body === "object" ? (body as any).classification ?? null : null;
+
+  return { ok: true as const, classification, body };
 }
 
 // Deterministic regression guards for known screenshots (by exact screenshot_sha256).
@@ -247,11 +253,19 @@ export async function POST(req: Request) {
           return jsonError("Item classify (mode) returned error", 500, {
             where: "vision.items.classify",
             mode,
+            status: classified.status ?? null,
             body: classified.body ?? null,
           });
         }
 
-        const classification_result = classified.classification ?? null;
+        const classification_result = classified.classification;
+        if (!classification_result) {
+          return jsonError("Item classify (mode) returned null classification", 502, {
+            where: "vision.items.classify",
+            mode,
+            bodyKeys: classified.body && typeof classified.body === "object" ? Object.keys(classified.body) : null,
+          });
+        }
 
         const { error: updErr } = await supabase
           .from("victory_submissions")
@@ -293,11 +307,18 @@ export async function POST(req: Request) {
         if (!classified.ok) {
           return jsonError("Item classify returned error", 500, {
             where: "vision.items.classify",
+            status: classified.status ?? null,
             body: classified.body ?? null,
           });
         }
 
-        const classification_result = classified.classification ?? null;
+        const classification_result = classified.classification;
+        if (!classification_result) {
+          return jsonError("Item classify returned null classification", 502, {
+            where: "vision.items.classify",
+            bodyKeys: classified.body && typeof classified.body === "object" ? Object.keys(classified.body) : null,
+          });
+        }
 
         const { error: updErr } = await supabase
           .from("victory_submissions")
@@ -406,20 +427,35 @@ export async function POST(req: Request) {
         return jsonError("Item classify (mode) returned error", 500, {
           where: "vision.items.classify",
           mode,
+          status: classified.status ?? null,
           body: classified.body ?? null,
         });
       }
-      classification_result = classified.classification ?? null;
+      if (!classified.classification) {
+        return jsonError("Item classify (mode) returned null classification", 502, {
+          where: "vision.items.classify",
+          mode,
+          bodyKeys: classified.body && typeof classified.body === "object" ? Object.keys(classified.body) : null,
+        });
+      }
+      classification_result = classified.classification;
       classificationRecomputed = true;
     } else if (classify) {
       const classified = await runClassification(bytes, ext, contentType, null);
       if (!classified.ok) {
         return jsonError("Item classify returned error", 500, {
           where: "vision.items.classify",
+          status: classified.status ?? null,
           body: classified.body ?? null,
         });
       }
-      classification_result = classified.classification ?? null;
+      if (!classified.classification) {
+        return jsonError("Item classify returned null classification", 502, {
+          where: "vision.items.classify",
+          bodyKeys: classified.body && typeof classified.body === "object" ? Object.keys(classified.body) : null,
+        });
+      }
+      classification_result = classified.classification;
       classificationRecomputed = true;
     }
 
@@ -499,7 +535,7 @@ export async function POST(req: Request) {
       storage_path,
       screenshot_sha256,
       classificationRecomputed,
-      ...(classificationRecomputed ? { classification: classification_result ?? null } : {}),
+      ...(classificationRecomputed ? { classification: classification_result } : {}),
       itemCrops: itemCrops ?? null,
     });
   } catch (e: any) {
